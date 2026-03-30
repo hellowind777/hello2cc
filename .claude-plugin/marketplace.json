@@ -1,0 +1,20 @@
+{
+  "name": "hello2cc-local",
+  "owner": {
+    "name": "hello2cc"
+  },
+  "metadata": {
+    "description": "Local marketplace for the hello2cc Claude Code plugin"
+  },
+  "plugins": [
+    {
+      "name": "hello2cc",
+      "description": "Native-first orchestration plugin for third-party models on Claude Code, with silent Agent model injection and optional output styles.",
+      "version": "0.0.1",
+      "source": "./",
+      "author": {
+        "name": "hello2cc"
+      }
+    }
+  ]
+}

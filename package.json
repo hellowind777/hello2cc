@@ -1,0 +1,30 @@
+{
+  "name": "hello2cc",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Native-first Claude Code plugin that helps third-party models behave more like first-party models with silent Agent model injection, plans, teams, verification, and optional output styles.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hellowind777/hello2cc.git"
+  },
+  "homepage": "https://github.com/hellowind777/hello2cc",
+  "bugs": {
+    "url": "https://github.com/hellowind777/hello2cc/issues"
+  },
+  "scripts": {
+    "validate": "node ./scripts/validate-plugin.mjs .",
+    "test": "node --test",
+    "check": "npm run validate && npm test"
+  },
+  "files": [
+    ".claude-plugin/",
+    "hooks/",
+    "scripts/",
+    "output-styles/",
+    "skills/"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

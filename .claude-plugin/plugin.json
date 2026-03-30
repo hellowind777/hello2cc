@@ -1,0 +1,72 @@
+{
+  "name": "hello2cc",
+  "version": "0.0.1",
+  "description": "Native-first Claude Code plugin that keeps third-party models on Claude Code's built-in Agent, TeamCreate, Task, ToolSearch, verification, and output-style workflows.",
+  "author": {
+    "name": "hello2cc"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "orchestration",
+    "toolsearch",
+    "subagent",
+    "agent-team",
+    "ascii-diagram",
+    "gpt",
+    "llm"
+  ],
+  "skills": "./skills",
+  "outputStyles": "./output-styles",
+  "userConfig": {
+    "routing_policy": {
+      "title": "Routing Policy",
+      "type": "string",
+      "description": "路由策略。可选：native-inject、prompt-only。推荐 native-inject；在原生 Agent 调用前静默补 model。",
+      "sensitive": false
+    },
+    "primary_model": {
+      "title": "Primary Model",
+      "type": "string",
+      "description": "主会话与高能力原生 Agent 默认模型，例如 cc-gpt-5.4。留空时默认 cc-gpt-5.4。",
+      "sensitive": false
+    },
+    "subagent_model": {
+      "title": "Subagent Model",
+      "type": "string",
+      "description": "所有未显式指定模型的原生 Agent 默认模型。留空时默认 cc-gpt-5.4。",
+      "sensitive": false
+    },
+    "guide_model": {
+      "title": "Guide Model",
+      "type": "string",
+      "description": "Claude Code Guide（内部标识 claude-code-guide）的显式模型，例如 cc-gpt-5.4。留空时默认 cc-gpt-5.4。",
+      "sensitive": false
+    },
+    "explore_model": {
+      "title": "Explore Model",
+      "type": "string",
+      "description": "Explore 的显式模型，例如 cc-gpt-5.3-codex-medium。留空时默认 cc-gpt-5.3-codex-medium。",
+      "sensitive": false
+    },
+    "plan_model": {
+      "title": "Plan Model",
+      "type": "string",
+      "description": "Plan 的显式模型。留空则继承主模型或 subagent_model。",
+      "sensitive": false
+    },
+    "general_model": {
+      "title": "General Model",
+      "type": "string",
+      "description": "General-Purpose（内部标识 general-purpose）的显式模型。留空则继承主模型或 subagent_model。",
+      "sensitive": false
+    },
+    "team_model": {
+      "title": "Team Model",
+      "type": "string",
+      "description": "带 team_name 的原生 Agent 默认模型。留空则继承 subagent_model。",
+      "sensitive": false
+    }
+  }
+}
