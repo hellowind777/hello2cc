@@ -1,8 +1,8 @@
 {
   "name": "hello2cc",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
-  "description": "Skill-free, native-first Claude Code plugin that helps third-party models behave more like first-party models with finer-grained Agent and TeamCreate routing, silent model injection, verification, and persistent output styles.",
+  "description": "Skill-free, native-first Claude Code plugin that mirrors the current model into native agents, nudges proactive tool and team use, and can silently bootstrap a persistent output style.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

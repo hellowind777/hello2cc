@@ -1,7 +1,7 @@
 {
   "name": "hello2cc",
-  "version": "0.0.5",
-  "description": "Skill-free, native-first Claude Code plugin with finer-grained Agent, TeamCreate, Task, ToolSearch, MCP, verification, and output-style orchestration.",
+  "version": "0.0.6",
+  "description": "Skill-free, native-first Claude Code plugin with current-model mirroring, finer-grained Agent/TeamCreate routing, verification guardrails, and optional output-style bootstrapping.",
   "author": {
     "name": "hello2cc"
   },
@@ -25,16 +25,22 @@
       "description": "路由策略。可选：native-inject、prompt-only。推荐 native-inject；在原生 Agent 调用前静默补 model。",
       "sensitive": false
     },
+    "mirror_session_model": {
+      "title": "Mirror Session Model",
+      "type": "boolean",
+      "description": "是否默认把当前 Claude Code 会话的主模型别名镜像到缺失 model 的原生 Agent / Team teammate。默认 true，更接近原生槽位体验。",
+      "sensitive": false
+    },
     "primary_model": {
       "title": "Primary Model",
       "type": "string",
-      "description": "主会话与高能力原生 Agent 默认模型，例如 cc-gpt-5.4。留空时默认 cc-gpt-5.4。",
+      "description": "主会话与高能力原生 Agent 默认模型，例如 cc-gpt-5.4 或 opus。留空时优先镜像当前会话模型，否则默认 cc-gpt-5.4。",
       "sensitive": false
     },
     "subagent_model": {
       "title": "Subagent Model",
       "type": "string",
-      "description": "所有未显式指定模型的原生 Agent 默认模型。留空时默认 cc-gpt-5.4。",
+      "description": "所有未显式指定模型的原生 Agent 默认模型。留空时优先使用 CLAUDE_CODE_SUBAGENT_MODEL，再镜像当前会话模型，最后回退主模型。",
       "sensitive": false
     },
     "guide_model": {
@@ -65,6 +71,18 @@
       "title": "Team Model",
       "type": "string",
       "description": "带 team_name 的原生 Agent 默认模型。留空则继承 subagent_model。",
+      "sensitive": false
+    },
+    "bootstrap_output_style": {
+      "title": "Bootstrap Output Style",
+      "type": "string",
+      "description": "是否在首次 SessionStart 或插件升级后自动把 outputStyle 写入用户级 ~/.claude/settings.json。可选：user-if-unset（默认）、force-user、off。",
+      "sensitive": false
+    },
+    "managed_output_style": {
+      "title": "Managed Output Style",
+      "type": "string",
+      "description": "自动写入用户级 settings.json 的输出风格名称。默认 hello2cc Native。",
       "sensitive": false
     }
   }

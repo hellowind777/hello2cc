@@ -129,10 +129,6 @@ function runCase(name, prompt, sessionExpectations) {
     fail(`real-session case "${name}" did not load hello2cc`);
   }
 
-  if (initLine.output_style !== 'hello2cc Native') {
-    fail(`real-session case "${name}" did not apply hello2cc Native output style`);
-  }
-
   const requiredTools = ['ToolSearch', 'TeamCreate', 'Task', 'TaskOutput', 'TaskStop'];
   for (const tool of requiredTools) {
     if (!Array.isArray(initLine.tools) || !initLine.tools.includes(tool)) {

@@ -202,6 +202,12 @@ function validateLifecycleScripts() {
     join(root, 'scripts', 'subagent-context.mjs'),
     join(root, 'scripts', 'subagent-stop.mjs'),
     join(root, 'scripts', 'task-lifecycle.mjs'),
+    join(root, 'scripts', 'lib', 'hook-io.mjs'),
+    join(root, 'scripts', 'lib', 'native-context.mjs'),
+    join(root, 'scripts', 'lib', 'output-style-bootstrap.mjs'),
+    join(root, 'scripts', 'lib', 'plugin-data.mjs'),
+    join(root, 'scripts', 'lib', 'plugin-meta.mjs'),
+    join(root, 'scripts', 'lib', 'session-state.mjs'),
     join(root, 'scripts', 'lib', 'task-quality.mjs'),
     join(root, 'scripts', 'lib', 'subagent-quality.mjs'),
   ];

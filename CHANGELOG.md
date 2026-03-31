@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.6 - 2026-03-31
+
+- Added current-session model mirroring so missing native `Agent.model` values can inherit the active Claude Code model alias (for example `opus`) instead of relying on hard-coded defaults
+- Added automatic user-scope `outputStyle` bootstrapping with `user-if-unset` / `force-user` / `off` policies, applied once per plugin version on `SessionStart`
+- Refactored orchestration into smaller runtime helpers for hook I/O, session state, plugin data, native routing context, and managed output style handling
+- Expanded routing and subagent guidance to prefer clearer tables for inventories, task matrices, validation summaries, and trade-off comparisons
+- Added automated tests for session-model mirroring and managed output-style bootstrapping
+- Relaxed real-session regression so it validates stable native capability exposure without requiring a preselected output style in the active user environment
+
 ## 0.0.5 - 2026-03-30
 
 - Added finer-grained native routing for `General-Purpose`, `TeamCreate`, `TaskCreate`, `TaskUpdate`, `TaskList`, and MCP-oriented workflows
