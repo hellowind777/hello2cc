@@ -147,9 +147,9 @@ test('route extracts prompt text from structured payloads', () => {
   }, env);
   const context = output.hookSpecificOutput.additionalContext;
 
-  assert.match(context, /TeamCreate/);
-  assert.match(context, /TaskCreate/);
-  assert.match(context, /TaskList/);
+  assert.match(context, /并行发起多个原生 `Agent` worker/);
+  assert.match(context, /等待完成通知/);
+  assert.doesNotMatch(context, /TeamCreate/);
 });
 
 test('route keeps codebase research on native search tools before agent escalation', () => {
@@ -165,20 +165,20 @@ test('route keeps codebase research on native search tools before agent escalati
   assert.doesNotMatch(context, /先 `ToolSearch`/);
 });
 
-test('route promotes TeamCreate plus SendMessage and TeamDelete when native team tools are exposed', () => {
+test('route promotes TeamCreate only for explicit team workflows when native team tools are exposed', () => {
   const env = isolatedEnv();
   const output = run('route', {
     session_id: 'route-team',
     tools: ['Agent', 'TeamCreate', 'SendMessage', 'TeamDelete', 'TaskCreate', 'TaskList', 'TaskUpdate', 'TaskGet'],
     agents: ['General-Purpose'],
-    prompt: 'Research this repo, implement the change, and verify the result without making edits yet.',
+    prompt: 'Use TeamCreate to build a persistent agent team for this multi-agent workflow.',
   }, env);
   const context = output.hookSpecificOutput.additionalContext;
 
   assert.match(context, /TeamCreate/);
   assert.match(context, /SendMessage/);
   assert.match(context, /TeamDelete/);
-  assert.match(context, /TaskGet/);
+  assert.doesNotMatch(context, /TaskOutput/);
 });
 
 test('route promotes General-Purpose for bounded implementation slices', () => {
@@ -247,17 +247,29 @@ test('route falls back to TodoWrite when native task tools are absent but TodoWr
   assert.doesNotMatch(context, /TaskCreate/);
 });
 
-test('route falls back to parallel Agent calls when TeamCreate is unavailable', () => {
+test('route falls back to parallel Agent calls when explicit team workflow is requested but TeamCreate is unavailable', () => {
   const env = isolatedEnv();
   const output = run('route', {
     session_id: 'route-no-team',
-    tools: ['Agent', 'TaskCreate', 'TaskList', 'TaskUpdate'],
+    tools: ['Agent', 'SendMessage', 'TaskStop'],
+    prompt: 'Use TeamCreate and teammates to coordinate research and implementation in parallel.',
+  }, env);
+  const context = output.hookSpecificOutput.additionalContext;
+
+  assert.match(context, /当前会话没有暴露 `TeamCreate`/);
+  assert.match(context, /并行发起多个原生 `Agent` worker/);
+});
+
+test('route warns against using TaskOutput as the default worker polling path', () => {
+  const env = isolatedEnv();
+  const output = run('route', {
+    session_id: 'route-no-taskoutput-polling',
+    tools: ['Agent', 'SendMessage', 'TaskStop', 'TaskOutput'],
     prompt: 'Research this repo, implement the change, and verify the result.',
   }, env);
   const context = output.hookSpecificOutput.additionalContext;
 
-  assert.match(context, /没有 `TeamCreate`/);
-  assert.match(context, /并行原生 `Agent`/);
+  assert.match(context, /不要把 `TaskOutput` 当成普通 worker 的默认结果获取方式/);
 });
 
 test('route avoids forcing Claude Code Guide when it is not exposed', () => {
@@ -490,4 +502,18 @@ test('config-change clears cached session context so stale models are not reused
 
   const cached = JSON.parse(readFileSync(cachePath, 'utf8'));
   assert.equal(cached['config-change'], undefined);
+});
+test('route keeps native task-board guidance for explicit task-tracking requests', () => {
+  const env = isolatedEnv();
+  const output = run('route', {
+    session_id: 'route-task-board',
+    tools: ['TaskCreate', 'TaskList', 'TaskUpdate', 'TaskGet'],
+    prompt: 'Create a task board checklist to research, implement, and verify this change.',
+  }, env);
+  const context = output.hookSpecificOutput.additionalContext;
+
+  assert.match(context, /TaskCreate/);
+  assert.match(context, /TaskList/);
+  assert.match(context, /TaskUpdate/);
+  assert.match(context, /TaskGet/);
 });

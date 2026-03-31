@@ -75,11 +75,7 @@ const RESEARCH_PATTERNS = [
 const SWARM_PATTERNS = [
   /parallel/,
   /in parallel/,
-  /swarm/,
-  /teamcreate/,
   /subagent/,
-  /teammate/,
-  /task(create|update|list|get|output)/,
   /多个模块/,
   /并行/,
   /同时推进/,
@@ -87,6 +83,22 @@ const SWARM_PATTERNS = [
   /协作/,
   /分工/,
   /任务编排/,
+];
+
+const TEAM_WORKFLOW_PATTERNS = [
+  /swarm/,
+  /teamcreate/,
+  /teamdelete/,
+  /sendmessage/,
+  /teammate/,
+  /multi-agent team/,
+  /agent team/,
+  /agents team/,
+  /persistent team/,
+  /团队代理/,
+  /团队编排/,
+  /子代理编排/,
+  /持久团队/,
 ];
 
 const VERIFY_PATTERNS = [
@@ -356,6 +368,7 @@ export function classifyPrompt(prompt) {
     (frontend && backend);
   const plan = complex || multiTrackByStructure || hasAny(text, PLAN_PATTERNS);
   const swarm = hasAny(text, SWARM_PATTERNS) || multiTrackByStructure;
+  const teamWorkflow = hasAny(text, TEAM_WORKFLOW_PATTERNS);
   const decisionHeavy = hasQuestionIntent(text) && hasAny(text, DECISION_PATTERNS);
   const capabilityQuery = explicitHostFeature || (hasQuestionIntent(text) && hasAny(text, HOST_TOPIC_PATTERNS)) || mcp;
   const codeResearch = research && !capabilityQuery;
@@ -382,6 +395,7 @@ export function classifyPrompt(prompt) {
     diagram: hasAny(text, DIAGRAM_PATTERNS),
     research,
     swarm,
+    teamWorkflow,
     verify,
     complex,
     tools: explicitHostFeature,

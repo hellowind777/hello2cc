@@ -4,7 +4,7 @@
 
 它不负责 provider、gateway、模型映射或账号权限；它负责的是：**当你已经把第三方模型接入 Claude Code 之后，让这些模型尽量像原生 Opus / Sonnet 一样使用 Claude Code。**
 
-当前版本：`0.2.1`
+当前版本：`0.2.2`
 
 ---
 
@@ -25,16 +25,17 @@
 > - 更自然地走 `ToolSearch`
 > - 更自然地走 `EnterPlanMode()` / `Task*`
 > - 更自然地走 `Explore` / `Plan` / `General-Purpose` / `Claude Code Guide`
-> - 更自然地走 `TeamCreate` / `SendMessage` / `TeamDelete`
+> - 更自然地走并行原生 `Agent` / `SendMessage` / `TaskStop`
+> - 只在真正需要时才走 `TeamCreate` / `TeamDelete`
 > - 更自然地使用 `AskUserQuestion`
 > - 更自然地优先 MCP / connected tools / `ListMcpResources` / `ReadMcpResource`
 > - 输出更接近 Claude Code 原生的简洁、结构化、行动优先风格
 
 ---
 
-## 0.2.1 的核心方向
+## 0.2.2 的核心方向
 
-`0.2.1` 的重点是在保持 capability-aware、native-first 的同时，进一步收紧边界，避免 hello2cc 干扰 Claude Code 现有工作流：
+`0.2.2` 的重点是在保持 capability-aware、native-first 的同时，进一步把多代理行为拉回 Claude Code 更原生的 worker 协调方式：
 
 - **能力感知优先**：先看当前会话真实暴露了哪些工具和 agent
 - **状态感知优先**：尽量依赖会话上下文、任务状态、团队状态，而不是靠大段关键词猜意图
@@ -42,11 +43,14 @@
 - **静默增强**：尽量不打断用户现有工作流，不额外引入 skills，不要求手动加载
 - **规则让位**：用户消息、Claude Code 宿主规则、`CLAUDE.md` / `AGENTS.md` / 项目规则，始终高于 hello2cc
 - **格式不接管**：如果你的工作流要求顶部信息栏、底部操作栏、固定格式或特殊命令路由，hello2cc 不应覆盖它们
+- **并行优先回归原生**：普通多线任务默认优先并行启动多个原生 `Agent` worker，而不是先把所有事情都推成 `TeamCreate`
+- **结果回传更原生**：普通 worker 默认等待完成通知回传，不把 `TaskOutput` 当成默认轮询方式
 
 这能明显降低：
 
 - 语言切换导致的误判
 - 模糊关键词导致的误触发
+- 多代理结果回传不顺导致的错误调用
 - 对其他 Claude Code 工作流的干扰
 
 ---
@@ -57,9 +61,9 @@
 |---|---|
 | 原生工具发现 | 优先引导第三方模型发现和使用 Claude Code 原生工具 |
 | `ToolSearch` | 可用时主动优先用；不可用时明确提示宿主/网关门控原因 |
-| 规划与任务 | 复杂任务优先 `EnterPlanMode()` / `TaskCreate` / `TaskList` / `TaskUpdate` / `TaskGet`；如果当前没有 `Task*` 但有 `TodoWrite`，自动退回 `TodoWrite` |
+| 规划与任务 | 复杂任务优先 `EnterPlanMode()`；只有明确需要任务盘时再走 `TaskCreate` / `TaskList` / `TaskUpdate` / `TaskGet`；如果当前没有 `Task*` 但有 `TodoWrite`，自动退回 `TodoWrite` |
 | 原生 agent | 更自然地使用 `Explore` / `Plan` / `General-Purpose` / `Claude Code Guide` |
-| 原生 team | 多线任务优先 `TeamCreate`，续派优先 `SendMessage`，完成后 `TeamDelete` |
+| 多代理协作 | 普通多线任务优先并行原生 `Agent`；续派优先 `SendMessage`，跑偏时用 `TaskStop`；只有显式团队编排需求时再用 `TeamCreate` / `TeamDelete` |
 | 用户交互 | 当执行只被一个真实选择阻塞时，更自然地用 `AskUserQuestion` |
 | MCP / connected tools | 优先 `ListMcpResources` / `ReadMcpResource` 与原生 MCP 工具，而不是先上网搜索 |
 | 输出风格 | 默认更接近 Claude Code 的简洁、结构化、行动优先输出；如无更高优先级格式约束，优先 Markdown 表格而不是强推 ASCII |
@@ -128,7 +132,7 @@
 
 - 主线程默认进入 hello2cc 的 native-first 工作方式
 - 插件 output style 自动生效
-- 第三方模型会更自然地优先原生工具、原生 agent、原生 task/team 流程
+- 第三方模型会更自然地优先原生工具、原生 agent、原生计划流程与原生 worker 协调方式
 - `Claude Code Guide` / `Explore` 这类必要路径会尽量跟随当前会话模型
 
 ---

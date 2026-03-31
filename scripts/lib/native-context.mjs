@@ -167,22 +167,30 @@ function buildWorkingHabitLines(sessionContext = {}) {
     lines.push('- 如果进度只被一个真实用户选择阻塞，就提一个简短明确的问题，不要一次堆多个确认点。');
   }
 
-  if (optimisticCapability(sessionContext, 'taskToolAvailable', true)) {
-    if (optimisticCapability(sessionContext, 'enterPlanModeAvailable', true)) {
-      lines.push('- 非 trivial 任务优先 `EnterPlanMode()`，否则至少维护原生 `Task*` 跟踪。');
+  if (optimisticCapability(sessionContext, 'enterPlanModeAvailable', true)) {
+    if (optimisticCapability(sessionContext, 'taskToolAvailable', false)) {
+      lines.push('- 非 trivial 任务优先 `EnterPlanMode()`；只有明确需要任务盘时再维护原生 `Task*`。');
+    } else if (optimisticCapability(sessionContext, 'todoWriteAvailable', false)) {
+      lines.push('- 非 trivial 任务优先 `EnterPlanMode()`；如果当前没有原生 `Task*`，就用 `TodoWrite` 维护清单。');
     } else {
-      lines.push('- 非 trivial 任务至少维护原生 `Task*` 跟踪，不要只在正文里口头列步骤。');
+      lines.push('- 非 trivial 任务优先 `EnterPlanMode()`；不要只靠口头描述计划。');
     }
+  } else if (optimisticCapability(sessionContext, 'taskToolAvailable', false)) {
+    lines.push('- 当前会话可用原生 `Task*`；只有明确需要任务盘时再维护任务状态，不要默认把所有复杂任务都写成任务盘。');
   } else if (optimisticCapability(sessionContext, 'todoWriteAvailable', false)) {
     lines.push('- 当前会话没有原生 `Task*` 时，用 `TodoWrite` 维护清单，而不是把计划散落在正文里。');
   }
 
   if (optimisticCapability(sessionContext, 'sendMessageAvailable', false)) {
-    lines.push('- 原生 teammate / team 已启动后，补充指令优先用 `SendMessage`，不要重复整段背景。');
+    lines.push('- 已启动的原生 worker / teammate 需要补充指令时，优先用 `SendMessage`，不要重复整段背景。');
   }
 
   if (optimisticCapability(sessionContext, 'teamDeleteAvailable', false)) {
-    lines.push('- 原生团队完成后及时 `TeamDelete`，避免留下无用团队状态。');
+    lines.push('- 只有真的创建了持久团队时，完成后再 `TeamDelete`，避免留下无用团队状态。');
+  }
+
+  if (optimisticCapability(sessionContext, 'taskOutputAvailable', false)) {
+    lines.push('- 普通 `Agent` worker 的结果默认等完成通知或回传消息；不要把 `TaskOutput` 当成默认的子代理结果轮询工具。');
   }
 
   if (
@@ -236,9 +244,6 @@ function buildToolSearchLines(sessionContext = {}) {
 }
 
 function routeAvailability(sessionContext = {}) {
-  const taskToolState = capabilityState(sessionContext, 'taskToolAvailable');
-  const taskFallback = taskToolState === null ? true : taskToolState;
-
   return {
     agent: optimisticCapability(sessionContext, 'agentToolAvailable', true),
     askUserQuestion: optimisticCapability(sessionContext, 'askUserQuestionAvailable', false),
@@ -252,40 +257,38 @@ function routeAvailability(sessionContext = {}) {
     plan: optimisticCapability(sessionContext, 'planAgentAvailable', true),
     readMcpResource: optimisticCapability(sessionContext, 'readMcpResourceAvailable', false),
     sendMessage: optimisticCapability(sessionContext, 'sendMessageAvailable', false),
-    taskCreate: optimisticCapability(sessionContext, 'taskCreateAvailable', taskFallback),
+    taskCreate: optimisticCapability(sessionContext, 'taskCreateAvailable', false),
     taskGet: optimisticCapability(sessionContext, 'taskGetAvailable', false),
-    taskList: optimisticCapability(sessionContext, 'taskListAvailable', taskFallback),
-    taskTool: taskFallback,
-    taskUpdate: optimisticCapability(sessionContext, 'taskUpdateAvailable', taskFallback),
-    teamCreate: optimisticCapability(sessionContext, 'teamCreateAvailable', true),
+    taskList: optimisticCapability(sessionContext, 'taskListAvailable', false),
+    taskOutput: optimisticCapability(sessionContext, 'taskOutputAvailable', false),
+    taskTool: optimisticCapability(sessionContext, 'taskToolAvailable', false),
+    taskUpdate: optimisticCapability(sessionContext, 'taskUpdateAvailable', false),
+    taskStop: optimisticCapability(sessionContext, 'taskStopAvailable', false),
+    teamCreate: optimisticCapability(sessionContext, 'teamCreateAvailable', false),
     teamDelete: optimisticCapability(sessionContext, 'teamDeleteAvailable', false),
     todoWrite: optimisticCapability(sessionContext, 'todoWriteAvailable', false),
   };
 }
 
 function buildTaskPlanningStep(availability) {
-  if (availability.taskTool) {
-    const planningPrefix = availability.enterPlanMode
-      ? '先 `EnterPlanMode()`，或至少用 `TaskCreate` / `TaskList` / `TaskUpdate` 建立可追踪任务。'
-      : '用 `TaskCreate` / `TaskList` / `TaskUpdate` 建立可追踪任务。';
-
-    if (availability.taskGet && availability.taskUpdate) {
-      return `这是非 trivial 实现：${planningPrefix} 更新任务前先 \`TaskGet\` 读取当前状态。`;
+  if (availability.enterPlanMode) {
+    if (availability.taskTool) {
+      return '这是非 trivial 实现：先 `EnterPlanMode()`；只有真的需要任务盘时再用 `TaskCreate` / `TaskList` / `TaskUpdate`。';
     }
 
-    return `这是非 trivial 实现：${planningPrefix}`;
+    if (availability.todoWrite) {
+      return '这是非 trivial 实现：先 `EnterPlanMode()`；如果当前没有原生 `Task*`，至少用 `TodoWrite` 维护清单。';
+    }
+
+    return '这是非 trivial 实现：先 `EnterPlanMode()`，再按计划逐步执行。';
+  }
+
+  if (availability.taskTool) {
+    return '这是非 trivial 实现：先写出简短有序计划；只有真的需要任务盘时再用 `TaskCreate` / `TaskList` / `TaskUpdate`。';
   }
 
   if (availability.todoWrite) {
-    if (availability.enterPlanMode) {
-      return '这是非 trivial 实现：先 `EnterPlanMode()`；如果当前会话没有原生 `Task*`，至少用 `TodoWrite` 维护清单。';
-    }
-
     return '这是非 trivial 实现：当前会话没有原生 `Task*`，改用 `TodoWrite` 维护清单，不要只在正文里口头列步骤。';
-  }
-
-  if (availability.enterPlanMode) {
-    return '这是非 trivial 实现：先 `EnterPlanMode()`，再用简短有序清单承接执行。';
   }
 
   return '这是非 trivial 实现：先写出简短有序清单，再开始编辑。';
@@ -325,42 +328,41 @@ function buildSwarmStep(signals, availability) {
     return '';
   }
 
-  if (!availability.teamCreate) {
+  if (signals.teamWorkflow && availability.teamCreate) {
     const lines = [
-      `当前会话没有 \`TeamCreate\`：改用并行原生 \`Agent\` 调用推进 ${trackList}。`,
+      `用户显式要求团队编排：可以用 \`TeamCreate\` 建立持久团队来推进 ${trackList}。`,
     ];
 
-    if (availability.taskTool && availability.taskList) {
-      lines.push('通过 `TaskList` 查看可领任务，优先从低编号、未认领任务开始。');
-    } else if (availability.todoWrite) {
-      lines.push('用 `TodoWrite` 记录并行轨道，而不是在正文里模拟团队。');
+    if (availability.sendMessage) {
+      lines.push('团队成员已启动后，补充指令、修正范围或续派时用 `SendMessage`。');
+    }
+
+    if (availability.teamDelete) {
+      lines.push('团队完成后用 `TeamDelete` 清理。');
     }
 
     return lines.join(' ');
   }
 
   const lines = [
-    `这是多线任务：优先 \`TeamCreate\` 建立原生团队，并为 ${trackList} 创建独立任务。`,
+    `这是多线任务：优先在同一条回复里并行发起多个原生 \`Agent\` worker，分别覆盖 ${trackList}。`,
+    '启动后简短告诉用户已启动哪些 worker，然后等待完成通知 / 回传消息，不要立刻轮询普通 agent 结果。',
   ];
 
-  if (availability.taskTool && availability.taskList) {
-    lines.push('执行中持续使用 `TaskList` 观察待领任务，优先认领编号更低、依赖更少的任务。');
-  }
-
-  if (availability.taskTool && availability.taskUpdate) {
-    lines.push('任务推进时及时 `TaskUpdate`。');
-  }
-
-  if (availability.taskTool && availability.taskGet) {
-    lines.push('更新或续派前先 `TaskGet` 读取任务详情。');
-  }
-
   if (availability.sendMessage) {
-    lines.push('需要补充指令、修正范围或续派时用 `SendMessage`。');
+    lines.push('需要补充指令或续派时用 `SendMessage`。');
   }
 
-  if (availability.teamDelete) {
-    lines.push('团队完成后用 `TeamDelete` 清理。');
+  if (availability.taskStop) {
+    lines.push('如果某个 worker 明显走错方向，再用 `TaskStop` 中止。');
+  }
+
+  if (availability.taskOutput) {
+    lines.push('不要把 `TaskOutput` 当成普通 worker 的默认结果获取方式；它更适合明确的后台任务日志读取。');
+  }
+
+  if (signals.teamWorkflow && !availability.teamCreate) {
+    lines.push('当前会话没有暴露 `TeamCreate`，所以退回并行原生 `Agent`。');
   }
 
   return lines.join(' ');
@@ -459,7 +461,9 @@ export function buildRouteSteps(prompt, sessionContext = {}) {
     } else {
       steps.push('任务存在跨文件、架构取舍或多个阶段：先写出有序计划，再逐步执行。');
     }
-  } else if (signals.taskList) {
+  }
+
+  if (signals.taskList) {
     steps.push(buildTaskTrackingStep(availability));
   }
 

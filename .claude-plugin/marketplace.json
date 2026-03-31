@@ -10,7 +10,7 @@
     {
       "name": "hello2cc",
       "description": "Capability-aware, native-first plugin for third-party models on Claude Code, with native tool/agent/task/team/MCP routing and concise structured output.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "./",
       "author": {
         "name": "hello2cc"

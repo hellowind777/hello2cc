@@ -27,7 +27,7 @@ const contexts = {
     '',
     '- Follow the parent task and any higher-priority `CLAUDE.md` / project formatting rules; do not restyle the response on your own.',
     '- Convert findings into an executable plan with ordered phases, dependencies, validation checks, and rollback risks.',
-    '- Call out which slices stay in the main thread and which should become native `Agent` or `TeamCreate + Task*` work.',
+    '- Call out which slices stay in the main thread, which should become parallel native `Agent` work, and which ones truly need a persistent team workflow.',
     '- Use tables for task matrices, ownership splits, or trade-off comparisons when that makes the plan easier to scan.',
     '- Keep the plan concrete enough that a `General-Purpose` teammate can implement one slice without reinterpretation.',
   ].join('\n'),

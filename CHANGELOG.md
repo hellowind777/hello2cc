@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2 - 2026-04-01
+
+- Re-aligned hello2cc's multi-worker guidance with Claude Code's native worker flow: parallel work now prefers multiple `Agent` launches first instead of over-promoting `TeamCreate` for ordinary research / implement / verify turns
+- Added explicit guidance to wait for worker completion notifications and use `SendMessage` / `TaskStop` for continuation or correction, instead of nudging models toward polling ordinary worker results via `TaskOutput`
+- Kept native task-board support for explicit checklist / task-board requests, while stopping the plugin from pushing `TaskCreate` / `TaskList` / `TaskUpdate` as the default for every complex task
+- Updated the default main-agent overlay, output style, route heuristics, and regression tests so third-party models stay closer to Claude Code's native coordinator behavior without interfering with higher-priority repo rules
+
 ## 0.2.1 - 2026-04-01
 
 - Reduced hello2cc output-layer interference so user instructions, Claude Code host rules, and repository / user `CLAUDE.md` or `AGENTS.md` now explicitly take precedence over hello2cc overlays
