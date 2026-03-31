@@ -5,8 +5,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 function fail(message) {
-  console.error(`FAIL ${message}`);
-  process.exit(1);
+  throw new Error(String(message || 'unknown failure'));
 }
 
 function ok(message) {
@@ -17,22 +16,7 @@ function quoteForPowerShell(value) {
   return `'${String(value).replace(/'/g, "''")}'`;
 }
 
-function spawnClaude(args) {
-  if (process.platform === 'win32') {
-    const appData = process.env.APPDATA || '';
-    const claudePs1 = appData ? join(appData, 'npm', 'claude.ps1') : '';
-    if (!claudePs1 || !existsSync(claudePs1)) {
-      return { status: 1, stdout: '', stderr: 'claude.ps1 not found', error: null };
-    }
-
-    const command = `& ${quoteForPowerShell(claudePs1)} ${args.map(quoteForPowerShell).join(' ')}`;
-    return spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-Command', command], {
-      encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024,
-      shell: false,
-    });
-  }
-
+function spawnClaudeDirect(args) {
   return spawnSync('claude', args, {
     encoding: 'utf8',
     maxBuffer: 10 * 1024 * 1024,
@@ -40,33 +24,113 @@ function spawnClaude(args) {
   });
 }
 
-function ensureClaudeCli() {
-  const result = spawnClaude(['plugins', '--help']);
-  if (result.error || result.status !== 0) {
-    fail('claude CLI is required for real-session regression');
+function spawnClaude(args) {
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA || '';
+    const claudePs1 = appData ? join(appData, 'npm', 'claude.ps1') : '';
+
+    if (claudePs1 && existsSync(claudePs1)) {
+      const command = `& ${quoteForPowerShell(claudePs1)} ${args.map(quoteForPowerShell).join(' ')}`;
+      return spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-Command', command], {
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024,
+        shell: false,
+      });
+    }
   }
+
+  return spawnClaudeDirect(args);
+}
+
+function pluginCommand() {
+  const singular = spawnClaude(['plugin', '--help']);
+  if (!singular.error && singular.status === 0) {
+    return 'plugin';
+  }
+
+  const plural = spawnClaude(['plugins', '--help']);
+  if (!plural.error && plural.status === 0) {
+    return 'plugins';
+  }
+
+  fail('claude CLI is required for real-session regression');
+}
+
+let cachedPluginCommand = '';
+
+function ensureClaudeCli() {
+  if (!cachedPluginCommand) {
+    cachedPluginCommand = pluginCommand();
+  }
+
+  return cachedPluginCommand;
+}
+
+function extractPluginBlock(text, pluginName) {
+  const lines = String(text || '').split(/\r?\n/);
+  const index = lines.findIndex((line) => line.includes(pluginName));
+  if (index < 0) {
+    return '';
+  }
+
+  const block = [lines[index]];
+  for (let i = index + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (!line.trim()) {
+      break;
+    }
+
+    if (line.includes('@') && !line.includes(pluginName)) {
+      break;
+    }
+
+    if (/^\S/.test(line)) {
+      break;
+    }
+
+    block.push(line);
+  }
+
+  return block.join('\n');
 }
 
 function ensureHello2ccEnabled() {
-  const result = spawnClaude(['plugins', 'list']);
+  const cliPluginCommand = ensureClaudeCli();
+  const result = spawnClaude([cliPluginCommand, 'list']);
   if (result.error || result.status !== 0) {
     fail('unable to inspect installed Claude Code plugins');
   }
 
   const text = String(result.stdout || '');
-  const blockMatch = text.match(/❯\s+hello2cc@hello2cc-local[\s\S]*?(?=\n\s*❯|\s*$)/);
-  const pluginBlock = blockMatch?.[0] || '';
+  const pluginBlock = extractPluginBlock(text, 'hello2cc@hello2cc-local');
 
   if (!pluginBlock) {
     fail('hello2cc@hello2cc-local is not installed in the current Claude Code environment');
   }
 
-  if (/Status:\s*✘\s*disabled/i.test(pluginBlock)) {
-    const enableResult = spawnClaude(['plugins', 'enable', 'hello2cc@hello2cc-local']);
+  const scopeMatch = pluginBlock.match(/Scope:\s*(user|project|local)/i);
+  const scope = String(scopeMatch?.[1] || '').toLowerCase();
+  const scopedArgs = scope ? ['--scope', scope] : [];
+  const wasDisabled = /Status:\s*✘\s*disabled/i.test(pluginBlock);
+  if (wasDisabled) {
+    const enableResult = spawnClaude([cliPluginCommand, 'enable', ...scopedArgs, 'hello2cc@hello2cc-local']);
     if (enableResult.error || enableResult.status !== 0) {
       fail('hello2cc is installed but disabled, and automatic enable failed');
     }
   }
+
+  return {
+    restore() {
+      if (!wasDisabled) {
+        return;
+      }
+
+      const disableResult = spawnClaude([cliPluginCommand, 'disable', ...scopedArgs, 'hello2cc@hello2cc-local']);
+      if (disableResult.error || disableResult.status !== 0) {
+        fail('hello2cc was initially disabled, but restoring the disabled state failed after real-session regression');
+      }
+    },
+  };
 }
 
 function parseJsonLines(text) {
@@ -227,20 +291,49 @@ function runCase(name, prompt, sessionExpectations) {
   ok(`real-session ${name}`);
 }
 
-ensureClaudeCli();
-ensureHello2ccEnabled();
+function main() {
+  ensureClaudeCli();
+  const pluginState = ensureHello2ccEnabled();
+  let primaryError = null;
 
-runCase('baseline', 'Reply with exactly OK.', [
-  'Claude Code Guide',
-  'ToolSearch',
-  'General-Purpose',
-  'TeamCreate',
-  'force-for-plugin',
-]);
-runCase('repeat', 'Reply with exactly STILL_OK.', [
-  'Claude Code Guide',
-  'ToolSearch',
-  'General-Purpose',
-  'TeamCreate',
-  'force-for-plugin',
-]);
+  try {
+    runCase('baseline', 'Reply with exactly OK.', [
+      'Claude Code Guide',
+      'ToolSearch',
+      'General-Purpose',
+      'TeamCreate',
+      'force-for-plugin',
+    ]);
+    runCase('repeat', 'Reply with exactly STILL_OK.', [
+      'Claude Code Guide',
+      'ToolSearch',
+      'General-Purpose',
+      'TeamCreate',
+      'force-for-plugin',
+    ]);
+  } catch (error) {
+    primaryError = error;
+  }
+
+  try {
+    pluginState.restore();
+  } catch (restoreError) {
+    if (primaryError) {
+      primaryError.message = `${primaryError.message} (restore also failed: ${restoreError.message})`;
+      throw primaryError;
+    }
+
+    throw restoreError;
+  }
+
+  if (primaryError) {
+    throw primaryError;
+  }
+}
+
+try {
+  main();
+} catch (error) {
+  console.error(`FAIL ${error.message}`);
+  process.exit(1);
+}
