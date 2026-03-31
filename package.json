@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Skill-free, native-first Claude Code plugin that uses a namespaced default main agent, force-for-plugin output style, and minimal native agent model injection to make third-party models feel more like Claude Code native models.",
   "license": "Apache-2.0",

@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Skill-free, native-first Claude Code plugin with a namespaced default main agent, current-session model mirroring, finer-grained Agent/TeamCreate routing, and a force-for-plugin output style.",
   "author": {
     "name": "hello2cc"

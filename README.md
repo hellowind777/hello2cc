@@ -4,7 +4,7 @@
 
 它不负责接管 provider、网关或模型映射；它只负责在你已经用 `ccswitch`、provider profile、模型网关或原生槽位映射把第三方模型接进 Claude Code 之后，让这些模型在 Claude Code 里更接近原生 `Opus / Sonnet` 的使用体验。
 
-当前版本：`0.1.1`
+当前版本：`0.1.2`
 
 ---
 
@@ -31,7 +31,7 @@
 
 ---
 
-## 0.1.1 的核心方向
+## 0.1.2 的核心方向
 
 这次版本直接对齐了 Claude Code 最新插件机制里的两条官方路径：
 
@@ -207,7 +207,7 @@ Claude Code 最新源码已经明确表明：
 - `scripts/notify.mjs stop`
 - `notify = ["node", ".../scripts/notify.mjs", "codex-notify"]`
 
-`0.1.1` 新增了一个轻量兼容脚本：
+当前版本继续保留一个轻量兼容脚本：
 
 - `scripts/notify.mjs`
 
@@ -483,7 +483,7 @@ git push origin v0.1.2
 
 4. 等待 GitHub Actions 自动发布到 npm
 
-如果你要补发旧版本，也可以在 Actions 里手动运行 `Publish to npm`，输入已有 tag，例如 `v0.1.1`
+如果你要补发旧版本，也可以在 Actions 里手动运行 `Publish to npm`，输入已有 tag，例如 `v0.1.2`
 
 ---
 
