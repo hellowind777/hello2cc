@@ -16,6 +16,28 @@ export function configuredMirrorSessionModel() {
   return pluginOption('mirror_session_model') !== 'false';
 }
 
+function normalizeCompatibilityMode(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+
+  if ([
+    'sanitize-only',
+    'sanitize_only',
+    'sanitizeonly',
+  ].includes(normalized)) {
+    return 'sanitize-only';
+  }
+
+  return 'full';
+}
+
+export function configuredCompatibilityMode() {
+  return normalizeCompatibilityMode(pluginOption('compatibility_mode'));
+}
+
+export function shouldEmitAdditionalContext() {
+  return configuredCompatibilityMode() !== 'sanitize-only';
+}
+
 function mirroredSessionModel(sessionContext) {
   if (!configuredMirrorSessionModel()) return '';
 
@@ -28,6 +50,7 @@ function mirroredSessionModel(sessionContext) {
 
 export function configuredModels(sessionContext = {}) {
   const sessionModel = mirroredSessionModel(sessionContext);
+  const defaultAgentModelOption = pluginOption('default_agent_model');
   const primaryModelOption = pluginOption('primary_model');
   const subagentModelOption = pluginOption('subagent_model');
   const guideModelOption = pluginOption('guide_model');
@@ -35,20 +58,23 @@ export function configuredModels(sessionContext = {}) {
   const planModelOption = pluginOption('plan_model');
   const generalModelOption = pluginOption('general_model');
   const teamModelOption = pluginOption('team_model');
+  const envDefaultAgentModel = envValue('CLAUDE_CODE_SUBAGENT_MODEL');
+  const defaultAgentModel = defaultAgentModelOption || envDefaultAgentModel || '';
 
   const primaryModel = primaryModelOption || sessionModel || '';
-  const subagentFallback = envValue('CLAUDE_CODE_SUBAGENT_MODEL');
-  const subagentModel = subagentModelOption || subagentFallback || sessionModel || primaryModel || '';
-  const guideModel = guideModelOption || sessionModel || primaryModel || '';
-  const exploreModel = exploreModelOption || sessionModel || subagentModel || primaryModel || '';
-  const planModel = planModelOption || primaryModel || sessionModel || subagentModel || '';
-  const generalModel = generalModelOption || primaryModel || subagentModel || sessionModel || '';
-  const teamModel = teamModelOption || subagentModel || generalModel || primaryModel || sessionModel || '';
+  const subagentModel = subagentModelOption || defaultAgentModel || sessionModel || primaryModel || '';
+  const guideModel = guideModelOption || defaultAgentModel || sessionModel || primaryModel || '';
+  const exploreModel = exploreModelOption || defaultAgentModel || sessionModel || subagentModel || primaryModel || '';
+  const planModel = planModelOption || defaultAgentModel || primaryModel || sessionModel || subagentModel || '';
+  const generalModel = generalModelOption || subagentModel || defaultAgentModel || primaryModel || sessionModel || '';
+  const teamModel = teamModelOption || subagentModel || defaultAgentModel || generalModel || primaryModel || sessionModel || '';
 
   return {
     routingPolicy: configuredPolicy(),
+    compatibilityMode: configuredCompatibilityMode(),
     mirrorSessionModel: configuredMirrorSessionModel(),
     sessionModel,
+    defaultAgentModel,
     primaryModel,
     subagentModel,
     guideModel,
@@ -56,8 +82,9 @@ export function configuredModels(sessionContext = {}) {
     planModel,
     generalModel,
     teamModel,
+    explicitDefaultAgentModel: Boolean(defaultAgentModelOption || envDefaultAgentModel),
     explicitPrimaryModel: Boolean(primaryModelOption),
-    explicitSubagentModel: Boolean(subagentModelOption || subagentFallback),
+    explicitSubagentModel: Boolean(subagentModelOption),
     explicitGuideModel: Boolean(guideModelOption),
     explicitExploreModel: Boolean(exploreModelOption),
     explicitPlanModel: Boolean(planModelOption),

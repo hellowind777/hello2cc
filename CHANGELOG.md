@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.7 - 2026-04-02
+
+- Added a true `default_agent_model` option so users can define one native-safe default agent model preference without having to overuse per-agent overrides
+- Normalized `opus(1M)` to the host-safe `opus` agent slot while keeping the actual Opus-family landing point in the user's external model mapping layer such as CCSwitch
+- Kept `Thinking` / reasoning model routing out of hello2cc's responsibility boundary so the plugin stays focused on native agent behavior instead of duplicating provider or session model wiring
+- Added persistent `wantsWorktree` intent tracking plus `PreToolUse(Agent)` isolation sanitization so ordinary parallel workers no longer accidentally inherit `worktree` isolation unless the user explicitly asked for it
+- Added `compatibility_mode = sanitize-only` so hello2cc can coexist more safely with other hook-heavy plugins by keeping only `Agent` input sanitization and suppressing extra SessionStart / UserPromptSubmit / SubagentStart overlays
+- Expanded regression coverage for default agent model handling, `opus(1M)` normalization, worktree isolation sanitization, and sanitize-only compatibility mode
+- Refreshed the README to focus on practical usage, installation, upgrade, configuration, and CCSwitch pairing guidance instead of implementation details
+
 ## 0.2.6 - 2026-04-01
 
 - Fixed the ordinary-dialogue agent path so hello2cc now strips implicit teammate fields outside real team workflows, preventing third-party models from accidentally turning plain subagent work into `team=main` / `team=default` teammate spawns

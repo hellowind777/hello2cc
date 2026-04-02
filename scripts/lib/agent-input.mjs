@@ -15,6 +15,12 @@ function stripAgentTeamFields(input) {
   return updatedInput;
 }
 
+function stripAgentWorktreeIsolation(input) {
+  const updatedInput = { ...input };
+  delete updatedInput.isolation;
+  return updatedInput;
+}
+
 export function normalizeAgentTeamSemantics(input = {}, sessionContext = {}) {
   const workerName = trimmed(input?.name);
   const explicitTeamName = trimmed(input?.team_name);
@@ -55,5 +61,20 @@ export function normalizeAgentTeamSemantics(input = {}, sessionContext = {}) {
     input: stripAgentTeamFields(input),
     changed: true,
     reason: 'hello2cc blocked implicit assistant team semantics until TeamCreate or a real explicit team_name is available',
+  };
+}
+
+export function normalizeAgentIsolation(input = {}, sessionContext = {}) {
+  const explicitIsolation = trimmed(input?.isolation).toLowerCase();
+  const wantsWorktree = Boolean(sessionContext?.lastPromptSignals?.wantsWorktree);
+
+  if (explicitIsolation !== 'worktree' || wantsWorktree) {
+    return { input, changed: false, reason: '' };
+  }
+
+  return {
+    input: stripAgentWorktreeIsolation(input),
+    changed: true,
+    reason: 'hello2cc removed Agent.isolation=worktree because the user did not explicitly request worktree isolation',
   };
 }

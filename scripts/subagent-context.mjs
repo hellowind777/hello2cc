@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { shouldEmitAdditionalContext } from './lib/config.mjs';
+
 const cmd = process.argv[2] || '';
 
 function writeJson(additionalContext) {
@@ -9,6 +11,10 @@ function writeJson(additionalContext) {
     },
     suppressOutput: true,
   }));
+}
+
+function writeSuppress() {
+  process.stdout.write(JSON.stringify({ suppressOutput: true }));
 }
 
 const contexts = {
@@ -45,12 +51,24 @@ const contexts = {
 
 switch (cmd) {
   case 'explore':
+    if (!shouldEmitAdditionalContext()) {
+      writeSuppress();
+      break;
+    }
     writeJson(contexts.explore);
     break;
   case 'plan':
+    if (!shouldEmitAdditionalContext()) {
+      writeSuppress();
+      break;
+    }
     writeJson(contexts.plan);
     break;
   case 'general':
+    if (!shouldEmitAdditionalContext()) {
+      writeSuppress();
+      break;
+    }
     writeJson(contexts.general);
     break;
   default:

@@ -2,245 +2,292 @@
 
 `hello2cc` 是一个面向 Claude Code 的静默型、native-first 插件。
 
-它不负责 provider、gateway、模型映射或账号权限；它负责的是：
+它不负责 provider、gateway、账号权限或模型接入；它负责的是：
 
-**当你已经把第三方模型接进 Claude Code 后，让这些模型尽量像原生 Opus / Sonnet 一样使用 Claude Code。**
+**当你已经把外部模型接进 Claude Code 后，让它更像原生 Claude Code 一样使用工具、Agent、计划、任务、MCP 和团队能力。**
 
-当前版本：`0.2.6`
+当前版本：`0.2.7`
 
 ---
 
-## 它的目标
+## 一句话理解
 
-如果你已经通过下面任一方式把第三方模型接进 Claude Code：
+如果你已经通过以下任一方式把模型接进 Claude Code：
 
-- `ccswitch`
-- provider profile / gateway
-- 原生模型槽位映射
-- 第三方 API 代理
+- CCSwitch
+- provider profile
+- API gateway
+- 原生槽位映射
 
 那么 `hello2cc` 解决的是下一层问题：
 
-> 如何让第三方模型在 Claude Code 里更像原生模型那样工作：
->
-> - 更自然地发现并使用原生工具
-> - 更自然地优先 `ToolSearch`
-> - 更自然地进入 `EnterPlanMode()`、`Task*`
-> - 更自然地使用 `Explore`、`Plan`、`General-Purpose`、`Claude Code Guide`
-> - 更自然地并行使用原生 `Agent`
-> - 只在真正需要团队编排时才使用 `TeamCreate` / `TeamDelete`
-> - 更自然地使用 `SendMessage`、`TaskStop`、`AskUserQuestion`
-> - 更自然地优先 MCP / connected tools / `ListMcpResources` / `ReadMcpResource`
-> - 输出更接近 Claude Code 原生的简洁、结构化、行动优先风格
+> **如何让这个模型在 Claude Code 里更自然地工作，而不是只“能连上”。**
 
 ---
 
-## 0.2.6 重点改进
+## 它能带来什么
 
-`0.2.6` 重点修复了两个直接影响体验的问题：
-
-- **普通对话更稳**：普通 subagent 场景不会再轻易被误判成 agent team
-- **团队边界更清楚**：只有显式团队工作流才会继续走 `TeamCreate` / `team_name`
-- **语言跟随更自然**：更倾向跟随用户当前语言输出，减少无故切到英文
-- **输出更像原生**：减少“我打算 / let’s / 我正在思考”这类显眼的元叙述
-- **仍然保持静默**：不需要 skills，不需要每次手动加载，不需要单独切换另一套工作流
-
----
-
-## 装上以后你会得到什么
-
-| 能力方向 | 体验效果 |
+| 方向 | 你能感受到的变化 |
 |---|---|
-| 原生工具发现 | 更容易主动去找并使用 Claude Code 原生工具 |
-| `ToolSearch` | 更自然地作为默认优先入口 |
-| 规划与任务 | 复杂任务优先 `EnterPlanMode()`；只有真的需要任务盘时再用 `TaskCreate` / `TaskList` / `TaskUpdate` / `TaskGet` |
-| 原生 agent | 更自然地用 `Explore` / `Plan` / `General-Purpose` / `Claude Code Guide` |
-| 多代理协作 | 普通多线任务优先并行原生 `Agent`；续派优先 `SendMessage`，跑偏时再用 `TaskStop` |
-| 团队能力 | 只有明确团队编排需求时才走 `TeamCreate` / `TeamDelete`，避免普通对话误进 team |
-| 用户交互 | 只被一个真实决策阻塞时，更自然地用 `AskUserQuestion` |
-| MCP / connected tools | 更自然地优先 `ListMcpResources` / `ReadMcpResource` 与原生 MCP 工具 |
-| 输出风格 | 默认更接近 Claude Code 的简洁、结构化、行动优先表达；能用 Markdown 表格就优先用 Markdown 表格 |
-| 语言表现 | 更倾向跟随用户当前语言输出，而不是无故切成英文 |
+| 原生工具使用 | 更主动使用 Claude Code 原生工具，而不是总想绕去别的路径 |
+| ToolSearch | 更自然地把 `ToolSearch` 作为能力确认入口 |
+| 规划与任务 | 非 trivial 任务更倾向先进入 `EnterPlanMode()`；只有真的需要任务盘时再使用 `Task*` |
+| 原生 Agent | 更自然地调用 `Explore`、`Plan`、`General-Purpose`、`Claude Code Guide` |
+| 多 worker 协作 | 普通并行任务优先并行多个原生 `Agent` worker，而不是轻易误进 team |
+| TeamCreate | 只有明确需要团队编排时才使用 `TeamCreate` / `TeamDelete` |
+| 用户交互 | 单一真实决策阻塞时，更自然地使用 `AskUserQuestion` |
+| MCP / connected tools | 更自然地优先 `ListMcpResources` / `ReadMcpResource` 与原生 MCP 路径 |
+| 输出风格 | 更接近 Claude Code 原生的简洁、行动优先、结构化表达 |
+| 语言跟随 | 中文会话更倾向持续中文输出，减少无故切到英文和元叙述 |
 
 ---
 
-## 它不会做什么
+## 适合谁
 
-`hello2cc` **不会**：
+如果你符合下面任一场景，`hello2cc` 会比较有价值：
 
-- 接管你的 provider / gateway / 模型槽位映射
-- 替你强行打开宿主没有提供的能力
+- 你已经把外部模型映射进 Claude Code 的 `opus / sonnet / haiku` 体系
+- 你希望模型更主动地用原生工具、计划、Agent 和 MCP
+- 你不想每轮手动加载 skills
+- 你希望普通对话不要误触发 agent team
+- 你希望中文会话尽量保持中文输出
+- 你希望插件尽量安静，不强行改写你现有工作流
+
+---
+
+## 它不做什么
+
+`hello2cc` 不会：
+
+- 接管你的 provider / gateway / CCSwitch 配置
+- 替宿主打开本来不存在的能力
 - 覆盖你已经显式传入的 `model`
-- 把 Claude Code 变成另一套“插件专属工作流”
-- 要求你每轮手动加载 skills
-- 覆盖 `CLAUDE.md` / `AGENTS.md` / 项目规则中已经明确写好的格式、路由和行为
+- 接管 CCSwitch 的 `Thinking` / 推理模型映射
+- 强迫你进入一套插件专属工作流
+- 覆盖高优先级的 `CLAUDE.md` / `AGENTS.md` / 项目规则 / 用户明确要求
 
 它追求的是：
 
-**在不打扰 Claude Code 原生工作方式的前提下，静默增强第三方模型的原生感。**
+**静默增强原生感，而不是接管 Claude Code。**
 
 ---
 
-## 适合谁用
+## 快速开始
 
-如果你符合下面任一场景，`hello2cc` 会很适合：
+### 1. 添加本地 marketplace
 
-- 你已经把第三方模型映射到了 Claude Code 的 `opus / sonnet / haiku` 槽位
-- 你希望第三方模型在 Claude Code 里更主动使用工具、计划、子代理、MCP
-- 你不想每次手动加载 skills
-- 你希望外接模型尽可能像原生 Opus 一样静默、无感地工作
-- 你希望普通对话不会误触发 agent team
-- 你希望中文会话尽量保持中文输出风格
+```bash
+claude plugin marketplace add "D:\GitHub\dev\hello2cc"
+```
+
+### 2. 安装插件
+
+```bash
+claude plugin install hello2cc@hello2cc-local
+```
+
+### 3. 重新打开 Claude Code 会话
+
+安装后通常不需要手动切 output style，也不需要再加载任何额外入口。
+
+默认会自动生效的内容：
+
+- 主线程使用 `hello2cc:native`
+- 插件输出风格自动启用
+- 优先原生工具、原生 Agent、原生计划 / 任务路径
+- 关键 Agent 路径尽量保持与当前会话模型语义一致
 
 ---
 
-## 安装
+## 重装 / 清缓存 / 升级
 
-### 1）添加本地 marketplace
+如果你修改了本地仓库，或者想彻底清理旧版本缓存，推荐顺序：
 
-```text
-/plugin marketplace add /path/to/hello2cc
+### 1. 卸载旧插件
+
+```bash
+claude plugin uninstall --scope user hello2cc@hello2cc-local
 ```
 
-### 2）安装插件
+### 2. 移除旧 marketplace（可选但推荐）
 
-```text
-/plugin install hello2cc@hello2cc-local
+```bash
+claude plugin marketplace remove hello2cc-local
 ```
 
-### 3）新开会话后直接使用
+### 3. 重新添加 marketplace
 
-安装后不需要再加载 skills，也不需要手动切换 output style。
-
-默认会发生：
-
-- 主线程默认进入 `hello2cc:native`
-- 插件输出风格自动生效
-- 第三方模型更倾向原生工具、原生 agent、原生计划流程和原生 worker 协调方式
-- `Explore`、`Claude Code Guide` 等关键路径会尽量与当前会话模型保持一致
-
----
-
-## 重装 / 升级
-
-如果你想重装或清理旧缓存，推荐顺序如下：
-
-```text
-/plugin uninstall hello2cc@hello2cc-local
-/plugin install hello2cc@hello2cc-local
+```bash
+claude plugin marketplace add "D:\GitHub\dev\hello2cc"
 ```
 
-如果你是从本地目录 marketplace 安装，升级后建议：
+### 4. 重新安装
 
-- 重新打开 Claude Code 会话
+```bash
+claude plugin install hello2cc@hello2cc-local
+```
+
+### 5. 建议重开会话
+
+如果你刚更新了仓库内容，建议：
+
+- 重新打开 Claude Code
 - 或执行 `/reload`
 
 这样更容易拿到最新缓存内容。
 
 ---
 
-## 推荐使用方式
+## 与 CCSwitch 配合的推荐方式
 
-### 方案 A：你已经用 `ccswitch` 或网关把第三方模型映射到 Claude Code 原生槽位
+这是最推荐的组合：
 
-这是最推荐的方式。
+### CCSwitch 负责
+
+- 主模型
+- 推理模型（Thinking）
+- `Haiku 默认模型`
+- `Sonnet 默认模型`
+- `Opus 默认模型`
+
+### hello2cc 负责
+
+- 原生工具 / Agent / 计划 / 任务 / MCP 使用习惯
+- `Agent.model` 的宿主安全槽位处理
+- 普通 worker 与 team workflow 的边界净化
+- worktree 使用边界
+- 与其他 orchestration 插件的兼容模式
+
+### 最佳实践
+
+如果你想让 Opus 家族最终落到 `opus(1M)`：
+
+- 在 **CCSwitch** 里把 **Opus 默认模型** 配成 `opus(1M)`
+- 在 **hello2cc** 里继续使用 `opus`
+
+也就是说：
+
+- hello2cc 只负责写宿主安全槽位
+- CCSwitch 决定这个槽位最终映射到哪个实际模型
+
+---
+
+## 推荐配置方案
+
+### 方案 A：最省心
+
+适合：你已经用 CCSwitch / gateway 把模型映射好了，只想让行为更接近原生。
 
 建议：
 
 - `mirror_session_model = true`
-- 其余模型覆盖项尽量留空
+- 其他模型覆盖项尽量留空
 
 效果：
 
-- 主线程沿用当前会话模型槽位
-- 必要时 `Claude Code Guide` / `Explore` 跟随当前会话模型
-- `Plan` / `General-Purpose` 等路径尽量保留 Claude Code 原生行为
+- 主线程跟随当前会话模型语义
+- `Claude Code Guide` / `Explore` 等关键路径必要时跟随当前会话语义
+- `Plan` / `General-Purpose` 等路径尽量保留原生习惯
 
-### 方案 B：你只想修正少数原生 agent 的模型
+### 方案 B：只修正少数 Agent
+
+适合：你只想调整某几个 Agent 的默认槽位。
 
 建议：
 
 - `mirror_session_model = true`
-- 按需填写 `guide_model`、`explore_model`
-- 其他覆盖项尽量留空
+- 按需填写 `guide_model`、`explore_model`、`general_model`、`team_model`
+- 其他覆盖项留空
 
-### 方案 C：你要强制某些原生 agent 固定走某个槽位
+### 方案 C：统一设一个默认 Agent 模型
 
-可以按需填写：
+适合：你想让多数 Agent 都稳定落到某个家族槽位。
 
-- `guide_model = opus`
-- `explore_model = sonnet`
-- `general_model = opus`
-- `team_model = sonnet`
+例如：
 
-注意：
+- `default_agent_model = opus`
 
-这些覆盖项建议填写 **Claude Code 原生槽位**：
+或者：
 
+- `default_agent_model = inherit`
+
+---
+
+## 配置项说明
+
+| 配置键 | 默认行为 | 说明 |
+|---|---|---|
+| `routing_policy` | `native-inject` | `native-inject` 会在需要时静默补 `Agent.model`；`prompt-only` 只做行为引导，不改工具输入 |
+| `mirror_session_model` | `true` | 优先镜像当前会话模型语义 |
+| `default_agent_model` | 空 | 原生 Agent 的统一默认模型偏好；推荐填写 `inherit / opus / sonnet / haiku` |
+| `primary_model` | 空 | 高能力原生 Agent 的显式槽位 |
+| `subagent_model` | 空 | 为未显式设模的原生 Agent 提供统一槽位 |
+| `guide_model` | 空 | `Claude Code Guide` 的显式槽位 |
+| `explore_model` | 空 | `Explore` 的显式槽位 |
+| `plan_model` | 空 | `Plan` 的显式槽位 |
+| `general_model` | 空 | `General-Purpose` 的显式槽位 |
+| `team_model` | 空 | 真实 team teammate 的显式槽位 |
+| `compatibility_mode` | `full` | 与其他 orchestration 插件冲突时可切到 `sanitize-only`，只保留参数净化 |
+
+---
+
+## 关于 `opus(1M)` 的正确理解
+
+`hello2cc` 推荐你直接填写 Claude Code 宿主安全槽位：
+
+- `inherit`
 - `opus`
 - `sonnet`
 - `haiku`
 
-如果你真正想让背后跑的是第三方模型，请在 `ccswitch`、provider profile、gateway 或模型映射层把这些槽位映射到你的模型，而不是把第三方别名直接写进 hello2cc 配置。
+如果你兼容性地填写了：
 
----
+- `opus(1M)`
 
-## 配置项
+`hello2cc` 会在真正写入 `Agent.model` 时自动归一化为：
 
-| 配置键 | 默认行为 | 说明 |
-|---|---|---|
-| `routing_policy` | `native-inject` | `native-inject` 会在必要路径静默补 `Agent.model`；`prompt-only` 只做行为引导，不改工具输入 |
-| `mirror_session_model` | `true` | 优先镜像当前会话模型槽位 |
-| `primary_model` | 空 | 高能力原生 agent 的显式槽位；建议填写 `opus / sonnet / haiku` |
-| `subagent_model` | 空 | 为未显式设模的原生 agent 提供统一槽位；建议填写 `opus / sonnet / haiku` |
-| `guide_model` | 空 | `Claude Code Guide` 的显式槽位 |
-| `explore_model` | 空 | `Explore` 的显式槽位 |
-| `plan_model` | 空 | 仅当你想强制覆盖 `Plan` 时填写 |
-| `general_model` | 空 | 仅当你想强制覆盖 `General-Purpose` 时填写 |
-| `team_model` | 空 | 仅当你想强制覆盖真实团队 teammate 时填写 |
-
----
-
-## 使用效果上的几个关键点
-
-### 1）不靠 skills
-
-`hello2cc` 当前默认就是 skill-free 路线。
+- `opus`
 
 也就是说：
 
-- 不需要每轮先加载 skills
-- 不需要先执行一个额外入口
-- 不需要在任务开始前手动提醒“请像 Opus 一样工作”
+- **hello2cc 可以识别 `opus(1M)`**
+- **但不会把 `opus(1M)` 原样写进 `Agent.model`**
 
-### 2）普通对话尽量不误进 team
+真正的 `opus -> opus(1M)` 落点，应该继续交给 CCSwitch 的 **Opus 默认模型** 去处理。
 
-这是 `0.2.6` 重点增强点之一。
+---
 
-现在普通对话下，更倾向：
+## 关于 worktree 的行为
 
-- 先走普通原生 `Agent`
-- 普通 worker 并行完成后回传结果
-- 不因为一次探索任务就误变成 `TeamCreate`
+`hello2cc` 当前的策略是：
 
-### 3）只有真正需要时才走团队编排
+- **只有用户明确要求 worktree / 隔离工作区时**，才保留 `worktree` 相关路径
+- 普通并行 worker 不再默认误带 `worktree`
 
-真正明确的团队工作流，例如：
+这能减少并发 subagent 时出现：
 
-- 持久团队
-- 明确 teammate 身份
-- 多人长期协同
-- 明确使用 `TeamCreate`
+- worktree 创建失败
+- `.git/config.lock` 竞争
+- UI 显示 `0 tool uses` 但其实 agent 没真正开始工作
 
-才更适合走团队路径。
+---
 
-### 4）更倾向跟随用户语言
+## 关于与其他插件共存
 
-如果你在中文会话里使用 Claude Code，`hello2cc` 会更倾向让第三方模型：
+如果你同时启用了 OMC 或其他也会大量注入 hooks / system-reminder 的插件，建议尝试：
 
-- 继续使用中文
-- 减少无故英文自述
-- 减少“我打算 / let’s / I’m thinking”这类显眼元叙述
+```json
+{
+  "compatibility_mode": "sanitize-only"
+}
+```
+
+启用后：
+
+- 保留 `model / team / isolation` 这类参数净化
+- 不再继续注入 `SessionStart / UserPromptSubmit / SubagentStart` 的额外上下文
+
+这更适合多插件并存环境。
 
 ---
 
@@ -250,41 +297,37 @@
 
 通常不需要。
 
-插件启用后，默认会走插件自己的输出风格与主线程 agent 设置。
-
-### 可以直接把 `cc-gpt-*` 这类别名写进配置吗？
+### hello2cc 要不要接管 CCSwitch 的 Thinking 模型？
 
 不建议。
 
-更推荐把第三方模型别名映射到 Claude Code 原生槽位，然后让 hello2cc 只处理原生行为层。
+`Thinking` 更适合继续由 CCSwitch / 主线程模型配置负责；hello2cc 只处理原生 Agent 行为层。
 
-### 装了 hello2cc 会不会影响其他工作流？
+### 可以直接把第三方别名写进 hello2cc 吗？
 
-目标是尽量不影响。
+不推荐。
 
-只要更高优先级规则已经规定了格式、路由、行为或工作流，hello2cc 会尽量让位。
+更推荐：
 
-### 能做到和原生 Opus 100% 一模一样吗？
+- 在 CCSwitch / provider / gateway 层处理实际模型映射
+- 在 hello2cc 里只写 Claude Code 宿主安全槽位
 
-插件层会尽量逼近，但最终体验仍会受到以下因素影响：
+### 普通并行任务为什么不推荐默认走 team？
 
-- 第三方模型本身能力
-- gateway / provider 对工具协议的兼容程度
-- Claude Code 当前会话真实暴露的工具与能力
+因为普通 worker 和持久 team 是两种不同语义。
 
-所以更准确的目标是：
+普通并行任务更适合：
 
-**在插件层可控范围内，尽可能逼近原生 Opus 的使用体验。**
+- 多个原生 `Agent` worker 并行
+- 完成后回传结果
 
----
+而不是一上来就进入 `TeamCreate`
 
-## 兼容范围
+### 会不会影响已有项目规则？
 
-当前重点保证：
+设计目标是不影响。
 
-- Claude Code `2.1.76+`
-
-如果你使用更新版本，建议升级到最新 hello2cc 版本后再观察效果。
+只要更高优先级规则已经定义了格式、流程、命令路由或输出习惯，hello2cc 会尽量让位。
 
 ---
 
@@ -299,22 +342,10 @@ npm run test:real
 
 说明：
 
-- `npm run validate`：校验 manifest、hooks、settings、output style 和脚本结构
+- `npm run validate`：校验 manifest、hooks、settings、脚本结构
 - `npm test`：运行自动化测试
 - `npm run check`：组合执行 `validate + test`
-- `npm run test:real`：调用本机 Claude Code CLI 做真实会话回归
-
----
-
-## 发布
-
-hello2cc 已配置 npm 自动发布工作流：
-
-- 推送 `v*` tag 自动发布
-- 支持手动 `workflow_dispatch`
-- 发布前自动执行 `npm run check`
-- 发布前自动执行 `npm pack --dry-run`
-- 发布后自动创建或更新对应 GitHub Release
+- `npm run test:real`：调用本机 Claude Code CLI 做真实回归
 
 ---
 

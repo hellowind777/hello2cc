@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "type": "module",
   "description": "Silent, native-first Claude Code plugin that steers third-party models toward Claude-style tools, agents, tasks, teams, MCP workflows, and concise native output.",
   "license": "Apache-2.0",

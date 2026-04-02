@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Silent, native-first Claude Code plugin that steers third-party models toward Claude-style native tools, agents, tasks, teams, MCP workflows, and concise output.",
   "author": {
     "name": "hello2cc"
@@ -29,6 +29,12 @@
       "title": "Mirror Session Model",
       "type": "boolean",
       "description": "是否默认把当前 Claude Code 会话的主模型别名镜像到缺失 model 的原生 Agent / Team teammate。默认 true，更接近原生槽位体验。",
+      "sensitive": false
+    },
+    "default_agent_model": {
+      "title": "Default Agent Model",
+      "type": "string",
+      "description": "原生 Agent 的统一默认模型偏好。推荐填写 inherit / opus / sonnet / haiku；若兼容填写 opus(1M)，hello2cc 会在 Agent.model 边界归一化为宿主安全的 opus。真正的 Opus→opus(1M) 落点应在 CCSwitch 的“Opus 默认模型”中配置。",
       "sensitive": false
     },
     "primary_model": {
@@ -71,6 +77,12 @@
       "title": "Team Model",
       "type": "string",
       "description": "带 team_name 的原生 Agent 显式 Claude 槽位，仅填写 opus / sonnet / haiku。留空时默认保留 Claude Code 原生 inherit 行为；仅在你想强制覆盖团队 teammate 时填写。",
+      "sensitive": false
+    },
+    "compatibility_mode": {
+      "title": "Compatibility Mode",
+      "type": "string",
+      "description": "插件兼容模式。默认 full；当需要与 OMC 等同类 additionalContext / system-reminder 插件共存时，填写 sanitize-only，仅保留 Agent 参数净化（model / team / isolation），不再注入 SessionStart / UserPromptSubmit / SubagentStart 额外上下文。",
       "sensitive": false
     }
   }

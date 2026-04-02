@@ -8,6 +8,10 @@ function normalizeSlug(value) {
 
 const HOST_AGENT_MODEL_SLOTS = ['opus', 'sonnet', 'haiku'];
 
+function isInheritModel(value) {
+  return normalizeSlug(value) === 'inherit';
+}
+
 export function canonicalAgentType(input) {
   const raw = String(input?.subagent_type || input?.agent_type || input?.name || '').trim();
   if (!raw) return '';
@@ -65,19 +69,23 @@ export function preferredModelForAgent(input, config) {
   const hasTeamName = Boolean(teamName);
 
   if (agentType === 'claude-code-guide') {
-    return config.guideModel || config.sessionModel || config.primaryModel || '';
+    return config.guideModel || config.defaultAgentModel || config.sessionModel || config.primaryModel || '';
   }
 
   if (agentType === 'Explore') {
-    return config.exploreModel || config.sessionModel || config.subagentModel || config.primaryModel || '';
+    return config.exploreModel || config.defaultAgentModel || config.sessionModel || config.subagentModel || config.primaryModel || '';
   }
 
-  if (agentType === 'Plan' && config.explicitPlanModel) {
-    return config.planModel || '';
+  if (agentType === 'Plan') {
+    if (!config.explicitPlanModel && !config.explicitDefaultAgentModel) {
+      return '';
+    }
+
+    return config.planModel || config.defaultAgentModel || '';
   }
 
   if (agentType === 'general-purpose' && hasTeamName) {
-    if (!config.explicitTeamModel && !config.explicitSubagentModel) {
+    if (!config.explicitTeamModel && !config.explicitSubagentModel && !config.explicitDefaultAgentModel) {
       return '';
     }
 
@@ -85,7 +93,7 @@ export function preferredModelForAgent(input, config) {
   }
 
   if (agentType === 'general-purpose') {
-    if (!config.explicitGeneralModel && !config.explicitSubagentModel) {
+    if (!config.explicitGeneralModel && !config.explicitSubagentModel && !config.explicitDefaultAgentModel) {
       return '';
     }
 
@@ -93,7 +101,7 @@ export function preferredModelForAgent(input, config) {
   }
 
   if (hasTeamName) {
-    if (!config.explicitTeamModel && !config.explicitSubagentModel) {
+    if (!config.explicitTeamModel && !config.explicitSubagentModel && !config.explicitDefaultAgentModel) {
       return '';
     }
 
@@ -101,10 +109,10 @@ export function preferredModelForAgent(input, config) {
   }
 
   if (!agentType) {
-    return config.explicitSubagentModel ? config.subagentModel || '' : '';
+    return (config.explicitSubagentModel || config.explicitDefaultAgentModel) ? config.subagentModel || '' : '';
   }
 
-  if (config.explicitSubagentModel) {
+  if (config.explicitSubagentModel || config.explicitDefaultAgentModel) {
     return config.subagentModel || '';
   }
 
@@ -114,6 +122,10 @@ export function preferredModelForAgent(input, config) {
 export function resolvedAgentModelOverride(input, config) {
   const preferredModel = preferredModelForAgent(input, config);
   if (!preferredModel) {
+    return { model: '', reason: '' };
+  }
+
+  if (isInheritModel(preferredModel)) {
     return { model: '', reason: '' };
   }
 
@@ -127,7 +139,11 @@ export function resolvedAgentModelOverride(input, config) {
 
   const fallbackSlot = [
     config?.sessionModel,
+    config?.defaultAgentModel,
+    config?.subagentModel,
     config?.primaryModel,
+    config?.generalModel,
+    config?.teamModel,
   ]
     .map(hostAgentModelSlot)
     .find(Boolean) || '';

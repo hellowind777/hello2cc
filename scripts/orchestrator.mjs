@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { normalizeAgentTeamSemantics } from './lib/agent-input.mjs';
-import { configuredModels } from './lib/config.mjs';
+import { normalizeAgentIsolation, normalizeAgentTeamSemantics } from './lib/agent-input.mjs';
+import { configuredModels, shouldEmitAdditionalContext } from './lib/config.mjs';
 import { resolvedAgentModelOverride } from './lib/agent-models.mjs';
 import {
   allowWithUpdatedInput,
@@ -32,6 +32,11 @@ async function cmdSessionStart() {
   const payload = readStdinJson('orchestrator.mjs');
   const sessionContext = currentSessionContext(payload);
 
+  if (!shouldEmitAdditionalContext()) {
+    emptySuppress();
+    return;
+  }
+
   suppressHook('SessionStart', buildSessionStartContext(sessionContext));
 }
 
@@ -48,6 +53,11 @@ async function cmdRoute() {
 
   const signals = classifyPrompt(prompt);
   rememberPromptSignals(payload?.session_id, signals);
+
+  if (!shouldEmitAdditionalContext()) {
+    emptySuppress();
+    return;
+  }
 
   const additionalContext = buildRouteSteps(prompt, sessionContext);
   if (!additionalContext) {
@@ -69,18 +79,20 @@ async function cmdPreAgentModel() {
   }
 
   const teamNormalization = normalizeAgentTeamSemantics(input, sessionContext);
-  const override = resolvedAgentModelOverride(teamNormalization.input, configuredModels(sessionContext));
-  if (!override.model && !teamNormalization.changed) {
+  const isolationNormalization = normalizeAgentIsolation(teamNormalization.input, sessionContext);
+  const override = resolvedAgentModelOverride(isolationNormalization.input, configuredModels(sessionContext));
+  if (!override.model && !teamNormalization.changed && !isolationNormalization.changed) {
     emptySuppress();
     return;
   }
 
   const updatedInput = {
-    ...teamNormalization.input,
+    ...isolationNormalization.input,
     ...(override.model ? { model: override.model } : {}),
   };
   const reasons = [
     teamNormalization.reason,
+    isolationNormalization.reason,
     override.reason,
   ].filter(Boolean);
 

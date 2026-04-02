@@ -118,6 +118,7 @@ export function rememberPromptSignals(sessionId, signals = {}) {
       lastPromptSignals: {
         teamWorkflow: Boolean(signals?.teamWorkflow),
         swarm: Boolean(signals?.swarm),
+        wantsWorktree: Boolean(signals?.wantsWorktree),
       },
       updatedAt: new Date().toISOString(),
     },
