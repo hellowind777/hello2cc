@@ -49,7 +49,7 @@ function writeTranscript(root, sessionId, payload, extraRecords = []) {
   return transcriptPath;
 }
 
-test('session-start keeps native-first guidance concise and skill-free', () => {
+test('session-start keeps host-surface guidance concise without blocking skills', () => {
   const env = isolatedEnv();
   const output = run('session-start', {
     session_id: 'session-1',
@@ -66,8 +66,7 @@ test('session-start keeps native-first guidance concise and skill-free', () => {
   assert.match(context, /当前会话模型别名：`opus`/);
   assert.match(context, /默认跟随用户当前语言/);
   assert.match(context, /不要把内部思考过程直接说出来/);
-  assert.doesNotMatch(context, /Skill\(/);
-  assert.doesNotMatch(context, /skills?/i);
+  assert.match(context, /skills \/ workflows|skills \/ workflows|技能|宿主已暴露的能力表面/i);
 });
 
 test('session-start keeps ToolSearch guidance strictly native-first on proxy sessions', () => {
@@ -183,7 +182,7 @@ test('session-start keeps WebSearch guidance honest on proxy-like sessions', () 
   assert.match(context, /未完成真实搜索/);
 });
 
-test('route promotes native guide flow without skill references', () => {
+test('route promotes native guide flow without suppressing skill usage', () => {
   const env = isolatedEnv();
   run('session-start', {
     session_id: 'route-guide',
@@ -197,8 +196,35 @@ test('route promotes native guide flow without skill references', () => {
 
   assert.match(context, /Claude Code Guide/);
   assert.match(context, /ToolSearch/);
-  assert.doesNotMatch(context, /Skill\(/);
-  assert.doesNotMatch(context, /skills?/i);
+});
+
+test('session-start explains how surfaced skills and DiscoverSkills fit into the host capability surface', () => {
+  const env = isolatedEnv();
+  const output = run('session-start', {
+    session_id: 'session-skills',
+    model: 'opus',
+    tools: ['Skill', 'DiscoverSkills', 'ToolSearch'],
+  }, env);
+  const context = output.hookSpecificOutput.additionalContext;
+
+  assert.match(context, /Skills \/ 插件工作流/);
+  assert.match(context, /已暴露 `Skill`/);
+  assert.match(context, /已暴露 `DiscoverSkills`/);
+  assert.match(context, /`DiscoverSkills` 用于 skill \/ workflow 发现/);
+});
+
+test('route tells the model to prefer surfaced skills and DiscoverSkills for workflow-like tasks', () => {
+  const env = isolatedEnv();
+  const output = run('route', {
+    session_id: 'route-skills',
+    tools: ['Skill', 'DiscoverSkills', 'ToolSearch'],
+    prompt: '帮我做一次头脑风暴，看看有没有合适的 workflow 或 skill 可以用',
+  }, env);
+  const context = output.hookSpecificOutput.additionalContext;
+
+  assert.match(context, /优先调用 `Skill`/);
+  assert.match(context, /先用 `DiscoverSkills`/);
+  assert.match(context, /`ToolSearch` 主要用于工具 \/ MCP \/ 权限边界发现/);
 });
 
 test('route extracts prompt text from structured payloads', () => {

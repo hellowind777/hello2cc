@@ -364,6 +364,43 @@ const WORKTREE_PATTERNS = [
   /工作树/,
 ];
 
+const SKILL_SURFACE_PATTERNS = [
+  /\bskill\b/,
+  /skills/,
+  /slash command/,
+  /workflow/,
+  /plugin/,
+  /\/[a-z0-9][\w:-]*/,
+  /技能/,
+  /命令/,
+  /工作流/,
+  /插件/,
+];
+
+const SKILL_DISCOVERY_PATTERNS = [
+  /brainstorm/,
+  /ideate/,
+  /deploy/,
+  /release/,
+  /triage/,
+  /codemod/,
+  /scaffold/,
+  /batch/,
+  /bulk/,
+  /playbook/,
+  /checklist/,
+  /headless/,
+  /report/,
+  /头脑风暴/,
+  /部署/,
+  /发布/,
+  /批量/,
+  /脚手架/,
+  /报告/,
+  /套路/,
+  /流程化/,
+];
+
 export function startsWithExplicitCommand(prompt) {
   return /^(~|\/)/.test(String(prompt || '').trim());
 }
@@ -396,6 +433,8 @@ export function classifyPrompt(prompt) {
   const decisionHeavy = hasQuestionIntent(text) && hasAny(text, DECISION_PATTERNS);
   const capabilityQuery = explicitHostFeature || (hasQuestionIntent(text) && hasAny(text, HOST_TOPIC_PATTERNS)) || mcp;
   const codeResearch = research && !capabilityQuery;
+  const skillSurface = hasAny(text, SKILL_SURFACE_PATTERNS);
+  const skillWorkflowLike = skillSurface || hasAny(text, SKILL_DISCOVERY_PATTERNS);
 
   const tracks = [];
   if (frontend) tracks.push('frontend');
@@ -435,6 +474,8 @@ export function classifyPrompt(prompt) {
     decisionHeavy,
     capabilityQuery,
     codeResearch,
+    skillSurface,
+    skillWorkflowLike,
     tracks,
     boundedImplementation,
     toolSearchFirst: capabilityQuery,

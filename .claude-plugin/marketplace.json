@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "hello2cc",
-      "description": "Silent, native-first plugin for third-party models on Claude Code, with Claude-style tool, agent, task, team, and MCP routing.",
-      "version": "0.2.8",
+      "description": "Silent plugin for third-party models on Claude Code, helping them discover and correctly use host tools, agents, skills, workflows, and MCP.",
+      "version": "0.2.9",
       "source": "./",
       "author": {
         "name": "hello2cc"

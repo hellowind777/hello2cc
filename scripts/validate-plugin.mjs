@@ -272,10 +272,10 @@ function validateNativeFirstRouting() {
   }
 
   const text = readFileSync(orchestratorPath, 'utf8');
-  if (/Skill\(\{\s*skill:/m.test(text)) {
-    fail('scripts/orchestrator.mjs should not route users toward Skill(...) as the default path');
+  if (/do not use\s+`?Skill`?/i.test(text)) {
+    fail('scripts/orchestrator.mjs should not hard-block host skill usage');
   } else {
-    ok('native-first routing');
+    ok('host-surface routing');
   }
 }
 

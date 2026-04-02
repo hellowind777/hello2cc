@@ -180,6 +180,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: read
+      pull-requests: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -190,6 +192,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           TAG_NAME: ${{ needs.prepare.outputs.tag }}
           RELEASE_TITLE: ${{ needs.prepare.outputs.version }}
@@ -197,15 +200,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          notes_json="$(mktemp)"
           notes_file="$(mktemp)"
 
-          gh api \
-            --method POST \
-            "repos/$REPOSITORY/releases/generate-notes" \
-            -f tag_name="$TAG_NAME" > "$notes_json"
-
-          node -e "const fs=require('fs'); const [jsonFile, notesFile] = process.argv.slice(1); const payload = JSON.parse(fs.readFileSync(jsonFile, 'utf8')); const body = String(payload.body || '').trim(); fs.writeFileSync(notesFile, body ? body + '\n' : '', 'utf8');" "$notes_json" "$notes_file"
+          node ./scripts/generate-release-notes.mjs \
+            --repo "$REPOSITORY" \
+            --tag "$TAG_NAME" \
+            --output "$notes_file"
 
           prerelease_args=()
           if [ "$IS_PRERELEASE" = "true" ]; then

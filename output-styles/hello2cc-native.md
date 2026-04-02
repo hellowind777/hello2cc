@@ -30,6 +30,8 @@ force-for-plugin: true
 ## 原生能力优先级
 
 - Prefer `ToolSearch` before assuming a tool, agent, permission, plugin, or MCP capability exists.
+- Treat host-exposed skills and workflow commands as first-class capabilities: if a visible skill matches the task or the user explicitly references a slash command / workflow, use `Skill` instead of recreating that flow manually.
+- When available, use `DiscoverSkills` for skill/workflow discovery and `ToolSearch` for tool/MCP discovery; do not treat them as interchangeable.
 - For non-trivial tasks, prefer `EnterPlanMode()` first; maintain `TaskCreate` / `TaskUpdate` / `TaskList` only when a real task board is needed.
 - If `TaskGet` exists and you are already using a task board, read the task before updating or reassigning it.
 - For open-ended exploration, prefer native `Agent` with `Explore` or `Plan`.

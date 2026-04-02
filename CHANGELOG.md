@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.9 - 2026-04-02
+
+- Corrected hello2cc's routing stance from overly narrow native-first bias to host-surface-first guidance: third-party models are now reminded to respect all host-exposed capability surfaces instead of over-preferring only built-in tools and agents
+- Added explicit `Skill` / `DiscoverSkills` capability detection plus new session and route guidance so surfaced skills, slash-command workflows, and plugin workflows are treated as first-class options rather than being silently overshadowed by `ToolSearch` / `Plan` / `Agent`
+- Clarified routing boundaries between discovery layers: use `Skill` for known matching workflows, `DiscoverSkills` for skill/workflow discovery, and `ToolSearch` for tool / MCP / permission discovery instead of conflating them
+- Updated output-style, subagent guidance, validation rules, and regression tests so hello2cc no longer encodes “avoid skill usage” as a success condition
+- Added deterministic GitHub release-notes generation from `CHANGELOG.md`, with automatic acknowledgement sections when referenced issues / PRs exist, and backfilled all historical releases that were previously empty or only contained `Full Changelog`
+
 ## 0.2.8 - 2026-04-02
 
 - Added softer native `WebSearch` guidance for real-time / latest-information questions so hello2cc encourages the host's built-in search path without pretending the plugin itself can create missing network capability
@@ -75,6 +83,12 @@
 - Added npm publish metadata in `package.json` and release documentation in `README.md`, including support for both `NPM_TOKEN` and trusted-publishing based automation
 - Fixed the GitHub Actions publish workflow so npm token detection no longer relies on unsupported `secrets.*` checks inside `if:` expressions, which previously caused zero-job failed workflow runs
 
+## 0.1.2 - 2026-03-31
+
+- Added the first automated npm publishing workflow at `.github/workflows/publish.yml`, covering tag-triggered releases and manual dispatch entry points
+- Updated package metadata and README release guidance so the npm package and Claude Code plugin manifest stay version-aligned during release preparation
+- Cut the dedicated `0.1.2` release after wiring the publish automation and related release documentation into the repository
+
 ## 0.1.1 - 2026-03-31
 
 - Rebuilt more of Claude Code's host-side tasking guidance into the forced plugin output style so third-party models keep stronger native habits even when plugin output styles replace part of the host prompt composition
@@ -99,6 +113,12 @@
 - Narrowed `Agent.model` injection to the places that truly need correction (`Claude Code Guide`, `Explore`, and explicit override cases), preserving Claude Code's native inherit behavior for `Plan`, `general-purpose`, and custom agents by default
 - Added `ConfigChange` handling that clears cached session model state so config swaps do not leave stale session-model mirroring behind
 - Updated validation, unit tests, and real-session regression checks for namespaced plugin agents and forced plugin output styles
+
+## 0.0.9 - 2026-03-31
+
+- Finalized the first public native-first plugin defaults before the later `hello2cc:native` rename, consolidating the default main-thread agent and packaged settings into a quieter baseline
+- Simplified the shipped plugin surface by removing the old output-style bootstrap runtime, tightening manifest/settings defaults, and stabilizing the packaged hooks layout
+- Expanded routing, session-state, regression, and validation coverage so transcript-driven session-model discovery and native-first prompt overlays behaved reliably in real Claude Code sessions
 
 ## 0.0.7 - 2026-03-31
 

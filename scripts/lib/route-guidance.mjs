@@ -56,6 +56,42 @@ function buildResearchStep(signals) {
   return '这是研究 / 对比 / 文档任务：先做定向搜索与证据收集，再在需要扩大搜索面时转原生 `Explore` 或 `Plan`。';
 }
 
+function buildSkillWorkflowStep(signals, sessionContext = {}) {
+  const skillToolAvailable = Boolean(sessionContext?.skillToolAvailable);
+  const discoverSkillsAvailable = Boolean(sessionContext?.discoverSkillsAvailable);
+
+  if (!skillToolAvailable && !discoverSkillsAvailable) {
+    return '';
+  }
+
+  const needsWorkflowRouting = Boolean(
+    signals.skillSurface ||
+    signals.skillWorkflowLike ||
+    signals.complex ||
+    signals.taskList,
+  );
+
+  if (!needsWorkflowRouting) {
+    return '';
+  }
+
+  const lines = [];
+
+  if (skillToolAvailable) {
+    lines.push('如果当前回合已经出现 `Skills relevant to your task`、用户明确提到某个 skill / slash command / plugin workflow，或你已经知道有匹配的宿主 skill，就优先调用 `Skill`，不要绕过它重写同一套流程。');
+  }
+
+  if (discoverSkillsAvailable) {
+    lines.push('如果当前可见 skill 不能覆盖下一步，但任务像是可复用 workflow、插件能力或专门套路，先用 `DiscoverSkills` 做技能发现，再调用匹配的 `Skill`；不要猜 skill 名称。');
+  }
+
+  if (skillToolAvailable && discoverSkillsAvailable) {
+    lines.push('`ToolSearch` 主要用于工具 / MCP / 权限边界发现；`DiscoverSkills` 主要用于 skill / workflow 发现，不要混用。');
+  }
+
+  return lines.join(' ');
+}
+
 function buildCurrentInfoStep(signals, sessionContext = {}) {
   if (!signals.currentInfo) {
     return '';
@@ -83,6 +119,11 @@ export function buildRouteStepsFromSignals(signals, sessionContext = {}) {
   const steps = [];
 
   steps.push('可见文本默认跟随用户当前语言；不要输出“我打算 / 我应该 / let’s”这类内部思考式元叙述。');
+
+  const skillWorkflowStep = buildSkillWorkflowStep(signals, sessionContext);
+  if (skillWorkflowStep) {
+    steps.push(skillWorkflowStep);
+  }
 
   if (signals.toolSearchFirst) {
     steps.push('先 `ToolSearch` 确认可用工具、原生 agent 类型、MCP 能力、权限与边界，不要凭记忆猜。');

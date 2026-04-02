@@ -15,6 +15,8 @@ function hasAnyName(values, names) {
 
 const TOOL_CAPABILITY_RULES = [
   { key: 'agentToolAvailable', names: ['Agent'] },
+  { key: 'skillToolAvailable', names: ['Skill'] },
+  { key: 'discoverSkillsAvailable', names: ['DiscoverSkills'] },
   { key: 'toolSearchAvailable', names: ['ToolSearch'] },
   { key: 'teamCreateAvailable', names: ['TeamCreate'] },
   { key: 'teamDeleteAvailable', names: ['TeamDelete'] },

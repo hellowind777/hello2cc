@@ -39,7 +39,7 @@ function buildSessionModelLines(sessionContext = {}) {
   const lines = ['## 会话使用方式'];
 
   lines.push('- 像平常一样直接使用 Claude Code；不需要额外手动加载，也不需要切换到另一套工作流。');
-  lines.push('- hello2cc 只强化 Claude / Opus 风格的原生工具、原生 agent、原生计划与任务习惯，不替换现有 `CLAUDE.md`、项目规则或用户指定输出格式。');
+  lines.push('- hello2cc 负责强化宿主已暴露的能力表面：原生工具、原生 agent、skills / workflows、MCP / connected tools 与计划任务习惯；它不替换现有 `CLAUDE.md`、项目规则或用户指定输出格式。');
 
   if (config.sessionModel) {
     lines.push(`- 当前会话模型别名：\`${config.sessionModel}\`。`);
@@ -61,6 +61,7 @@ function buildWorkingHabitLines() {
     '- 保持 Claude / Opus 风格的原生工作方式：先读相关代码，再改动；优先改已有文件而不是新建文件。',
     '- 可见文本默认跟随用户当前语言；除非用户明确要求，否则不要无故切换语言。',
     '- 不要把内部思考过程直接说出来；工具前说明保持一句简短行动描述，避免“我打算 / 我应该 / let’s”式元叙述。',
+    '- 把宿主已暴露的 skills / workflows / plugin tools / MCP tools 视为一等能力；不要因为 hello2cc 存在就绕开它们。',
     '- 有专用读写 / 搜索工具时优先用专用工具，再考虑 shell。',
     '- 非 trivial 任务优先 `EnterPlanMode()`；只有真的需要任务盘时再维护原生 `Task*`。',
     '- 不确定可用工具、agent、MCP、权限边界时，优先 `ToolSearch`。',
@@ -77,6 +78,32 @@ function buildWorkingHabitLines() {
     '- 只有用户明确要求隔离工作树时才使用 `EnterWorktree`。',
     '- 宣称完成前先跑与改动最贴近的验证；验证结果要诚实。',
   ];
+}
+
+function buildSkillWorkflowLines(sessionContext = {}) {
+  const skillToolAvailable = Boolean(sessionContext?.skillToolAvailable);
+  const discoverSkillsAvailable = Boolean(sessionContext?.discoverSkillsAvailable);
+
+  if (!skillToolAvailable && !discoverSkillsAvailable) {
+    return [];
+  }
+
+  const lines = ['## Skills / 插件工作流'];
+
+  if (skillToolAvailable) {
+    lines.push('- 当前会话已暴露 `Skill`；如果本轮已经出现 `Skills relevant to your task`、用户明确提到某个 slash command / skill / workflow，或你已经知道有匹配 skill，优先调用它，而不是自己重写流程。');
+    lines.push('- 不要猜 skill 名称；只使用当前会话已暴露、已提示或已发现的 skill。');
+  }
+
+  if (discoverSkillsAvailable) {
+    lines.push('- 当前会话已暴露 `DiscoverSkills`；遇到中途转向、专门 workflow、插件化能力，或你怀疑已有现成 skill 但当前列表不够时，先发现再调用。');
+  }
+
+  if (skillToolAvailable && discoverSkillsAvailable) {
+    lines.push('- `DiscoverSkills` 用于 skill / workflow 发现；`ToolSearch` 用于工具 / MCP / 权限边界发现。');
+  }
+
+  return lines;
 }
 
 function buildToolSearchLines() {
@@ -137,7 +164,7 @@ export function buildSessionStartContext(sessionContext = {}) {
   return [
     '# hello2cc',
     '',
-    'hello2cc 会让第三方模型在 Claude Code 里尽量按 Claude / Opus 的原生方式工作：优先原生工具、原生 agent、原生计划与原生协作流程。',
+    'hello2cc 会让第三方模型在 Claude Code 里尽量按宿主真实暴露的方式工作：优先使用已暴露的工具、agent、skills / workflows、MCP 与计划协作能力，而不是绕过它们另写一套。',
     '',
     '## 优先级',
     '- 用户当前消息、Claude Code 宿主规则、`CLAUDE.md` / `AGENTS.md` / 项目规则，始终高于 hello2cc。',
@@ -146,6 +173,8 @@ export function buildSessionStartContext(sessionContext = {}) {
     ...buildSessionModelLines(sessionContext),
     '',
     ...buildWorkingHabitLines(),
+    '',
+    ...buildSkillWorkflowLines(sessionContext),
     '',
     ...buildObservedSurfaceLines(sessionContext),
     '',

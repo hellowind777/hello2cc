@@ -1,12 +1,12 @@
 # hello2cc
 
-`hello2cc` 是一个面向 Claude Code 的静默型、native-first 插件。
+`hello2cc` 是一个面向 Claude Code 的静默型、宿主能力优先插件。
 
 它不负责 provider、gateway、账号权限或模型接入；它负责的是：
 
-**当你已经把外部模型接进 Claude Code 后，让它更像原生 Claude Code 一样使用工具、Agent、计划、任务、MCP 和团队能力。**
+**当你已经把外部模型接进 Claude Code 后，让它更容易发现、判断并正确使用 Claude Code 已经暴露出来的工具、Agent、Skill、workflow、MCP、计划与团队能力。**
 
-当前版本：`0.2.8`
+当前版本：`0.2.9`
 
 ---
 
@@ -29,7 +29,9 @@
 
 | 方向 | 你能感受到的变化 |
 |---|---|
+| 能力发现 | 更容易发现当前会话真实暴露的工具、Agent、Skill、workflow 与 MCP |
 | 原生工具使用 | 更主动使用 Claude Code 原生工具，而不是总想绕去别的路径 |
+| Skills / workflows | 不再系统性压制已暴露的 Skill / DiscoverSkills / 插件工作流 |
 | ToolSearch | 更自然地把 `ToolSearch` 作为能力确认入口 |
 | 规划与任务 | 非 trivial 任务更倾向先进入 `EnterPlanMode()`；只有真的需要任务盘时再使用 `Task*` |
 | 原生 Agent | 更自然地调用 `Explore`、`Plan`、`General-Purpose`、`Claude Code Guide` |
@@ -47,7 +49,7 @@
 如果你符合下面任一场景，`hello2cc` 会比较有价值：
 
 - 你已经把外部模型映射进 Claude Code 的 `opus / sonnet / haiku` 体系
-- 你希望模型更主动地用原生工具、计划、Agent 和 MCP
+- 你希望模型更主动地用宿主真实暴露的工具、Skill、计划、Agent 和 MCP
 - 你不想每轮手动加载 skills
 - 你希望普通对话不要误触发 agent team
 - 你希望中文会话尽量保持中文输出
@@ -61,6 +63,7 @@
 
 - 接管你的 provider / gateway / CCSwitch 配置
 - 替宿主打开本来不存在的能力
+- 压制宿主已经暴露出来的 Skill / workflow / MCP / plugin 能力
 - 覆盖你已经显式传入的 `model`
 - 接管 CCSwitch 的 `Thinking` / 推理模型映射
 - 强迫你进入一套插件专属工作流
@@ -100,7 +103,7 @@ claude plugin install hello2cc@hello2cc-local
 
 - 主线程使用 `hello2cc:native`
 - 插件输出风格自动启用
-- 优先原生工具、原生 Agent、原生计划 / 任务路径
+- 优先使用宿主已暴露的能力表面：工具、Agent、Skill / workflow、MCP、计划 / 任务路径
 - 关键 Agent 路径尽量保持与当前会话模型语义一致
 
 ---
