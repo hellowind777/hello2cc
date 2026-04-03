@@ -68,40 +68,18 @@ function stripAgentTeamFields(input) {
   return updatedInput;
 }
 
-function stripAgentWorktreeIsolation(input) {
-  const updatedInput = { ...input };
-  delete updatedInput.isolation;
-  return updatedInput;
-}
-
 export function normalizeAgentTeamSemantics(input = {}, sessionContext = {}) {
   const workerName = trimmed(input?.name);
   const explicitTeamName = trimmed(input?.team_name);
-  const activeTeamName = trimmed(sessionContext?.teamName);
-  const teamSemantics = Boolean(
-    sessionContext?.lastPromptSignals?.teamSemantics ||
-    sessionContext?.lastPromptSignals?.teamWorkflow ||
-    sessionContext?.lastPromptSignals?.proactiveTeamWorkflow,
-  );
   const hasTeamSemantics = Boolean(workerName || explicitTeamName);
-  const activeTeamIsImplicit = isImplicitAssistantTeamName(activeTeamName);
   const explicitTeamIsImplicit = isImplicitAssistantTeamName(explicitTeamName);
-  const candidateTeamName = explicitTeamName || activeTeamName;
+  const candidateTeamName = explicitTeamName;
   const missingTeamFailure = candidateTeamName && !isImplicitAssistantTeamName(candidateTeamName)
     ? knownMissingTeamFailure(sessionContext, candidateTeamName)
     : null;
 
   if (!hasTeamSemantics) {
     return { input, changed: false, reason: '', blocked: false };
-  }
-
-  if (!teamSemantics) {
-    return {
-      input: stripAgentTeamFields(input),
-      changed: true,
-      reason: 'hello2cc normalized Agent to plain subagent semantics by removing implicit team fields outside team-oriented workflows',
-      blocked: false,
-    };
   }
 
   if (missingTeamFailure) {
@@ -117,29 +95,18 @@ export function normalizeAgentTeamSemantics(input = {}, sessionContext = {}) {
     return { input, changed: false, reason: '', blocked: false };
   }
 
-  if (activeTeamName && !activeTeamIsImplicit) {
-    return {
-      input: {
-        ...input,
-        team_name: activeTeamName,
-      },
-      changed: true,
-      reason: `hello2cc made Agent.team_name explicit from active team context (${activeTeamName})`,
-      blocked: false,
-    };
-  }
-
   return {
     input: stripAgentTeamFields(input),
     changed: true,
-    reason: 'hello2cc blocked implicit assistant team semantics until TeamCreate or a real explicit team_name is available',
+    reason: explicitTeamIsImplicit
+      ? 'hello2cc stripped reserved assistant team placeholders; use a real explicit team_name created by TeamCreate or fall back to a plain subagent'
+      : 'hello2cc stripped implicit teammate fields; plain workers should omit name/team_name, and real teammates should pass an explicit team_name',
     blocked: false,
   };
 }
 
 export function normalizeAgentIsolation(input = {}, sessionContext = {}) {
   const explicitIsolation = trimmed(input?.isolation).toLowerCase();
-  const wantsWorktree = Boolean(sessionContext?.lastPromptSignals?.wantsWorktree);
   const worktreeFailure = explicitIsolation === 'worktree'
     ? activeWorktreeFailure(sessionContext)
     : null;
@@ -153,16 +120,7 @@ export function normalizeAgentIsolation(input = {}, sessionContext = {}) {
     };
   }
 
-  if (explicitIsolation !== 'worktree' || wantsWorktree) {
-    return { input, changed: false, reason: '', blocked: false };
-  }
-
-  return {
-    input: stripAgentWorktreeIsolation(input),
-    changed: true,
-    reason: 'hello2cc removed Agent.isolation=worktree because the user did not explicitly request worktree isolation',
-    blocked: false,
-  };
+  return { input, changed: false, reason: '', blocked: false };
 }
 
 export function normalizeEnterWorktreeInput(input = {}, sessionContext = {}) {

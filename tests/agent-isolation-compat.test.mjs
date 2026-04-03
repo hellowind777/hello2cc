@@ -35,13 +35,8 @@ function isolatedEnv(overrides = {}) {
   };
 }
 
-test('pre-agent-model strips implicit worktree isolation when the user did not request it', () => {
+test('pre-agent-model no longer strips explicit worktree isolation by default', () => {
   const env = isolatedEnv();
-
-  run('route', {
-    session_id: 'strip-worktree',
-    prompt: 'Implement this focused fix and validate it.',
-  }, env);
 
   const output = run('pre-agent-model', {
     session_id: 'strip-worktree',
@@ -52,19 +47,13 @@ test('pre-agent-model strips implicit worktree isolation when the user did not r
     },
   }, env);
 
-  assert.equal(output.hookSpecificOutput.updatedInput.isolation, undefined);
-  assert.match(output.hookSpecificOutput.permissionDecisionReason, /removed Agent\.isolation=worktree/);
+  assert.deepEqual(output, { suppressOutput: true });
 });
 
-test('pre-agent-model preserves explicit worktree isolation when the user asked for it', () => {
+test('pre-agent-model preserves explicit worktree isolation and can still inject model defaults', () => {
   const env = isolatedEnv({
     CLAUDE_PLUGIN_OPTION_DEFAULT_AGENT_MODEL: 'opus',
   });
-
-  run('route', {
-    session_id: 'keep-worktree',
-    prompt: 'Use a git worktree for an isolated worktree while changing this feature.',
-  }, env);
 
   const output = run('pre-agent-model', {
     session_id: 'keep-worktree',
@@ -104,7 +93,7 @@ test('sanitize-only compatibility mode suppresses overlays but keeps pretool san
       isolation: 'worktree',
     },
   }, env);
-  assert.equal(pretoolOutput.hookSpecificOutput.updatedInput.isolation, undefined);
+  assert.deepEqual(pretoolOutput, { suppressOutput: true });
 
   const subagentOutput = spawnSync(process.execPath, [subagentContextPath, 'explore'], {
     cwd: resolve('.'),

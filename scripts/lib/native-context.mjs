@@ -1,5 +1,4 @@
-import { classifyPrompt } from './prompt-signals.mjs';
-import { buildRouteStepsFromSignals } from './route-guidance.mjs';
+import { buildRouteStateContext } from './route-guidance.mjs';
 import { buildSessionStartContext as buildSessionStartContextText } from './session-guidance.mjs';
 
 function flattenPromptValue(value, seen = new WeakSet()) {
@@ -49,7 +48,6 @@ export function buildSessionStartContext(sessionContext = {}) {
   return buildSessionStartContextText(sessionContext);
 }
 
-export function buildRouteSteps(prompt, sessionContext = {}) {
-  const signals = classifyPrompt(prompt);
-  return buildRouteStepsFromSignals(signals, sessionContext);
+export function buildRouteContext(sessionContext = {}) {
+  return buildRouteStateContext(sessionContext);
 }

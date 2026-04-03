@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "hello2cc",
-      "description": "Silent plugin for third-party models on Claude Code, helping them discover and correctly use host tools, agents, skills, workflows, and MCP.",
-      "version": "0.3.6",
+      "description": "Thin Claude Code plugin for third-party models, focused on host state, protocol adaptation, and repeated-failure debounce.",
+      "version": "0.4.0",
       "source": "./",
       "author": {
         "name": "hello2cc"

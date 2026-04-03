@@ -19,6 +19,12 @@ function isolatedEnv(overrides = {}) {
   };
 }
 
+function parseAdditionalContextJson(text) {
+  const match = String(text || '').match(/```json\r?\n([\s\S]*?)\r?\n```/);
+  assert.ok(match, 'expected a json code block in additionalContext');
+  return JSON.parse(match[1]);
+}
+
 function run(mode, payload, env = {}) {
   const result = spawnSync(process.execPath, [scriptPath, mode], {
     cwd: resolve('.'),
@@ -34,50 +40,47 @@ function run(mode, payload, env = {}) {
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
-test('subagent-context keeps ordinary workers free of teammate overlay', () => {
+test('subagent-context exposes plain worker capability as structured state', () => {
   const env = isolatedEnv();
   const output = run('general', {
     session_id: 'plain-worker',
     agent_id: 'agent-1234',
     agent_type: 'general-purpose',
   }, env);
-  const context = output.hookSpecificOutput.additionalContext;
+  const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
-  assert.match(context, /hello2cc General-Purpose mode/);
-  assert.doesNotMatch(context, /teammate overlay/);
-  assert.doesNotMatch(context, /TaskList/);
+  assert.equal(state.hello2cc_role, 'host-state');
+  assert.equal(state.semantic_routing, 'model_decides');
+  assert.equal(state.mode, 'General-Purpose');
+  assert.equal(state.can_write, true);
+  assert.equal(state.teammate, undefined);
 });
 
-test('subagent-context reinforces team semantics for writable teammates', () => {
+test('subagent-context exposes teammate identity without adding workflow prose', () => {
   const env = isolatedEnv();
   const output = run('general', {
     session_id: 'team-worker',
     agent_id: 'frontend-dev@delivery-squad',
     agent_type: 'general-purpose',
   }, env);
-  const context = output.hookSpecificOutput.additionalContext;
+  const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
-  assert.match(context, /hello2cc teammate overlay/);
-  assert.match(context, /frontend-dev/);
-  assert.match(context, /delivery-squad/);
-  assert.match(context, /SendMessage/);
-  assert.match(context, /TaskList/);
-  assert.match(context, /TaskGet/);
-  assert.match(context, /TaskUpdate/);
-  assert.match(context, /可写 teammate/);
-  assert.match(context, /idle 是正常行为/);
+  assert.equal(state.mode, 'General-Purpose');
+  assert.equal(state.teammate.agent, 'frontend-dev');
+  assert.equal(state.teammate.team, 'delivery-squad');
+  assert.equal(state.teammate.coordination_channel, 'SendMessage');
 });
 
-test('subagent-context keeps read-only teammates on native read-only behavior', () => {
+test('subagent-context keeps Explore on explicit read-only capability', () => {
   const env = isolatedEnv();
   const output = run('explore', {
     session_id: 'team-explore',
     agent_id: 'researcher@delivery-squad',
     agent_type: 'Explore',
   }, env);
-  const context = output.hookSpecificOutput.additionalContext;
+  const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
-  assert.match(context, /hello2cc Explore mode/);
-  assert.match(context, /只读 teammate/);
-  assert.match(context, /若任务其实需要改文件或验证，立刻用 `SendMessage` 告知 team lead 重新分派/);
+  assert.equal(state.mode, 'Explore');
+  assert.equal(state.capability, 'read-only-search');
+  assert.equal(state.can_write, false);
 });

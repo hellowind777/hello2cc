@@ -9,6 +9,12 @@ const scriptPath = resolve('scripts/orchestrator.mjs');
 
 export { test, assert, existsSync, mkdirSync, readFileSync, writeFileSync, join };
 
+export function parseAdditionalContextJson(text) {
+  const match = String(text || '').match(/```json\r?\n([\s\S]*?)\r?\n```/);
+  assert.ok(match, 'expected a json code block in additionalContext');
+  return JSON.parse(match[1]);
+}
+
 export function run(cmd, payload, env = {}) {
   const result = spawnSync(process.execPath, [scriptPath, cmd], {
     cwd: resolve('.'),

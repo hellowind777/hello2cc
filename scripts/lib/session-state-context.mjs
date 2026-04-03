@@ -114,20 +114,23 @@ export function rememberSessionContext(payload) {
 }
 
 /**
- * Stores prompt-derived routing hints that later pre-tool hooks can consult.
+ * Stores the last emitted prompt-state signature so route hooks can avoid repeats.
  */
-export function rememberPromptSignals(sessionId, signals = {}) {
+export function rememberRouteStateSignature(sessionId, signature = '') {
   const key = normalizeSessionId(sessionId);
   if (!key) return {};
 
-  return mutateSessionEntry(key, (current) => ({
-    ...current,
-    lastPromptSignals: {
-      teamWorkflow: Boolean(signals?.teamWorkflow),
-      proactiveTeamWorkflow: Boolean(signals?.proactiveTeamWorkflow),
-      teamSemantics: Boolean(signals?.teamSemantics),
-      swarm: Boolean(signals?.swarm),
-      wantsWorktree: Boolean(signals?.wantsWorktree),
-    },
-  }));
+  const nextSignature = String(signature || '').trim();
+  return mutateSessionEntry(key, (current) => {
+    if (!nextSignature) {
+      const next = { ...current };
+      delete next.lastRouteStateSignature;
+      return next;
+    }
+
+    return {
+      ...current,
+      lastRouteStateSignature: nextSignature,
+    };
+  });
 }

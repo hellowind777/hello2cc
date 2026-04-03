@@ -50,21 +50,13 @@ test('post-tool-failure records non-git worktree failures and pre-agent-model fa
     },
   }, env);
 
-  assert.equal(allowedDifferentCwd.hookSpecificOutput.permissionDecision, 'allow');
-  assert.equal(allowedDifferentCwd.hookSpecificOutput.updatedInput.isolation, undefined);
-  assert.match(allowedDifferentCwd.hookSpecificOutput.permissionDecisionReason, /removed Agent\.isolation=worktree/);
+  assert.deepEqual(allowedDifferentCwd, { suppressOutput: true });
 });
 
 test('pre-agent-model auto-unblocks stale worktree failures after the cwd becomes a git repo', () => {
   const env = isolatedEnv();
   const repoDir = join(env.HOME, 'repo');
   mkdirSync(join(repoDir, '.git'), { recursive: true });
-
-  run('route', {
-    session_id: 'worktree-recovered-git',
-    cwd: repoDir,
-    prompt: 'Use a git worktree for an isolated worktree while changing this feature.',
-  }, env);
 
   run('post-tool-failure', {
     session_id: 'worktree-recovered-git',

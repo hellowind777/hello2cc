@@ -53,7 +53,7 @@ function createSuccessfulStream(pluginPath) {
     subtype: 'hook_response',
     output: JSON.stringify({
       hookSpecificOutput: {
-        additionalContext: 'Claude Code Guide\nToolSearch',
+        additionalContext: '# hello2cc host_state\n\nTreat this as host state only.\n\n```json\n{\n  "protocol_adapters": {\n    "semantic_routing": "model_decides"\n  },\n  "host": {\n    "tools": [\n      "ToolSearch"\n    ]\n  }\n}\n```',
       },
     }),
   };

@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.4.0 - 2026-04-04
+
+- 将 hello2cc 从“语义路由器”收敛为“宿主状态提供者 + 协议适配器 + 失败防抖器”，把 plan / team / swarm / tool 选择权彻底还给主模型
+- SessionStart / UserPromptSubmit / SubagentStart 改为输出紧凑的结构化宿主状态，而不再注入大段硬编码路由文本，显著降低多语言误触发与 UI 重绘压力
+- `Agent` / `SendMessage` / `WebSearch` / worktree / team 相关兼容逻辑只保留确定性的协议修正和失败记忆，不再基于关键词猜测意图
+- 删除旧的 prompt 分类器与大量硬编码模式表，测试同步改为围绕结构化状态与失败恢复行为验证
+
 ## 0.3.6 - 2026-04-04
 
 - 收紧 plan / swarm / team 的误触发条件，减少只输入一段需求就被过度路由到计划或并行代理的问题

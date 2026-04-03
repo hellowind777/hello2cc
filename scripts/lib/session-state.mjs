@@ -1,5 +1,5 @@
 import {
-  rememberPromptSignals,
+  rememberRouteStateSignature,
   rememberSessionContext,
   sessionContextFromPayload,
 } from './session-state-context.mjs';
@@ -26,7 +26,7 @@ export function clearAllSessionContexts() {
 }
 
 export {
-  rememberPromptSignals,
+  rememberRouteStateSignature,
   rememberSessionContext,
   rememberToolFailure,
   rememberToolSuccess,

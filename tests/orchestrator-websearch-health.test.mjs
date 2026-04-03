@@ -1,11 +1,12 @@
 import {
   test,
   assert,
+  parseAdditionalContextJson,
   run,
   isolatedEnv,
 } from './helpers/orchestrator-test-helpers.mjs';
 
-test('route cools down proxy WebSearch guidance after repeated zero-search runs', () => {
+test('route reports proxy WebSearch cooldown as structured state after repeated zero-search runs', () => {
   const env = isolatedEnv({
     ANTHROPIC_BASE_URL: 'https://proxy.example.com/v1',
   });
@@ -39,13 +40,13 @@ test('route cools down proxy WebSearch guidance after repeated zero-search runs'
     model: 'opus',
     prompt: '帮我查一下今天 AI 新闻',
   }, env);
-  const context = output.hookSpecificOutput.additionalContext;
+  const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
-  assert.match(context, /最近连续返回 `Did 0 searches` 或错误/);
-  assert.match(context, /不要在同一条件下机械重试/);
+  assert.equal(state.websearch.mode, 'proxy-cooldown');
+  assert.equal(state.websearch.degraded, true);
 });
 
-test('route allows one probe retry for proxy WebSearch after explicit retry intent', () => {
+test('route reports one-shot probe eligibility when proxy WebSearch conditions recover', () => {
   const env = isolatedEnv({
     ANTHROPIC_BASE_URL: 'https://proxy.example.com/v1',
   });
@@ -78,11 +79,15 @@ test('route allows one probe retry for proxy WebSearch after explicit retry inte
     tools: ['WebSearch'],
     model: 'opus',
     prompt: '请重试一下，再查今天 AI 新闻',
-  }, env);
-  const context = output.hookSpecificOutput.additionalContext;
+  }, {
+    ...env,
+    ANTHROPIC_BASE_URL: 'https://proxy-2.example.com/v1',
+  });
+  const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
-  assert.match(context, /可以先做一次探测性 `WebSearch`/);
-  assert.match(context, /不要连续重试/);
+  assert.equal(state.websearch.mode, 'proxy-probe');
+  assert.equal(state.websearch.probe_allowed, true);
+  assert.equal(state.websearch.transport_changed, true);
 });
 
 test('successful proxy WebSearch clears degraded session memory', () => {
@@ -137,9 +142,6 @@ test('successful proxy WebSearch clears degraded session memory', () => {
     model: 'opus',
     prompt: '帮我查一下今天 AI 新闻',
   }, env);
-  const context = output.hookSpecificOutput.additionalContext;
 
-  assert.match(context, /优先尝试原生 `WebSearch`/);
-  assert.doesNotMatch(context, /探测性 `WebSearch`/);
-  assert.doesNotMatch(context, /机械重试/);
+  assert.deepEqual(output, { suppressOutput: true });
 });

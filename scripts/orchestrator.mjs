@@ -10,18 +10,18 @@ import {
   readStdinJson,
   suppressHook,
 } from './lib/hook-io.mjs';
-import { buildRouteSteps, buildSessionStartContext, extractPromptText } from './lib/native-context.mjs';
+import { buildRouteContext, buildSessionStartContext, extractPromptText } from './lib/native-context.mjs';
 import { normalizeSendMessageInput } from './lib/send-message-input.mjs';
 import {
   clearAllSessionContexts,
   clearSessionContext,
+  rememberRouteStateSignature,
   rememberToolFailure,
   rememberToolSuccess,
   rememberSessionContext,
-  rememberPromptSignals,
   readSessionContext,
 } from './lib/session-state.mjs';
-import { classifyPrompt, isSubagentPrompt, startsWithExplicitCommand } from './lib/prompt-signals.mjs';
+import { isSubagentPrompt, startsWithExplicitCommand } from './lib/prompt-signals.mjs';
 
 const cmd = process.argv[2] || '';
 
@@ -55,19 +55,25 @@ async function cmdRoute() {
     return;
   }
 
-  const signals = classifyPrompt(prompt);
-  rememberPromptSignals(payload?.session_id, signals);
-
   if (!shouldEmitAdditionalContext()) {
     emptySuppress();
     return;
   }
 
-  const additionalContext = buildRouteSteps(prompt, sessionContext);
+  const additionalContext = buildRouteContext(sessionContext);
   if (!additionalContext) {
+    rememberRouteStateSignature(payload?.session_id, '');
     emptySuppress();
     return;
   }
+
+  const signature = additionalContext;
+  if (!signature || sessionContext?.lastRouteStateSignature === signature) {
+    emptySuppress();
+    return;
+  }
+
+  rememberRouteStateSignature(payload?.session_id, signature);
 
   suppressHook('UserPromptSubmit', additionalContext);
 }

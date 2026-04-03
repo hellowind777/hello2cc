@@ -105,7 +105,7 @@ function assertSessionExpectations(name, lines, sessionExpectations) {
 }
 
 /**
- * Runs one real Claude CLI session and asserts hello2cc surfaces the expected native guidance.
+ * Runs one real Claude CLI session and asserts hello2cc surfaces the expected host-state contract.
  */
 export function runCase(name, prompt, sessionExpectations) {
   const { args, debugPath } = buildClaudeArgs(name, prompt);
@@ -136,11 +136,13 @@ export function runRealRegression() {
 
   try {
     runCase('baseline', 'Reply with exactly OK.', [
-      'Claude Code Guide',
+      'hello2cc host_state',
+      '"semantic_routing": "model_decides"',
       'ToolSearch',
     ]);
     runCase('repeat', 'Reply with exactly STILL_OK.', [
-      'Claude Code Guide',
+      'hello2cc host_state',
+      '"semantic_routing": "model_decides"',
       'ToolSearch',
     ]);
   } catch (error) {
