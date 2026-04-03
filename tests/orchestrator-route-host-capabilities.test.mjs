@@ -89,7 +89,7 @@ test('route keeps ToolSearch-first guidance even after transcript records beta p
   assert.doesNotMatch(context, /tool_reference/);
 });
 
-test('route remembers upstream instability from session-start but keeps native-first guidance active', () => {
+test('route keeps straightforward multi-file implementation out of plan mode even after transcript noise', () => {
   const env = isolatedEnv();
   const sessionId = 'route-cached-upstream-degraded';
   const transcriptPath = writeTranscript(env.HOME, sessionId, {
@@ -124,7 +124,7 @@ test('route remembers upstream instability from session-start but keeps native-f
   }, env);
   const context = output.hookSpecificOutput.additionalContext;
 
-  assert.match(context, /EnterPlanMode\(\)/);
+  assert.doesNotMatch(context, /EnterPlanMode\(\)/);
   assert.doesNotMatch(context, /连接 \/ 鉴权 \/ 上游账号异常/);
   assert.doesNotMatch(context, /上游代理问题/);
 });

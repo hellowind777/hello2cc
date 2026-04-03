@@ -62,12 +62,9 @@ export function buildRouteStepsFromSignals(signals, sessionContext = {}) {
     steps.push('这是边界清晰的实现 / 修复 / 验证子任务：优先使用原生 `Agent` 的 `General-Purpose`（全工具面）承接单一切片，而不是把探索、规划和实现都混在主线程。');
   }
 
-  if (signals.complex) {
-    steps.push(buildTaskPlanningLine(signals));
-  }
-
   if (signals.plan) {
-    steps.push('任务存在跨文件、架构取舍或多个阶段：优先计划模式；如果已经进入任务盘，就持续维护可追踪任务状态。');
+    steps.push(buildTaskPlanningLine(signals));
+    steps.push('只有当实现路径存在真实歧义、明显架构取舍，或需要先探索再定方案时，才进入计划模式；路径清晰时直接推进。');
   }
 
   if (signals.taskList) {

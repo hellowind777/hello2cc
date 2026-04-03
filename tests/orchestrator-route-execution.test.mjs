@@ -128,7 +128,7 @@ test('route warns against using TaskOutput as the default worker polling path', 
   const output = run('route', {
     session_id: 'route-no-taskoutput-polling',
     tools: ['Agent', 'SendMessage', 'TaskStop', 'TaskOutput'],
-    prompt: 'Research this repo, implement the change, and verify the result.',
+    prompt: 'Use subagent workers in parallel to research this repo, implement the change, and verify the result.',
   }, env);
   const context = output.hookSpecificOutput.additionalContext;
 

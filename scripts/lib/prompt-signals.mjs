@@ -14,6 +14,7 @@ import {
   MCP_PATTERNS,
   PLAN_PATTERNS,
   RESEARCH_PATTERNS,
+  RETRY_PATTERNS,
   REVIEW_PATTERNS,
   SKILL_DISCOVERY_PATTERNS,
   SKILL_SURFACE_PATTERNS,
@@ -43,10 +44,11 @@ export function isSubagentPrompt(prompt) {
 
 export function classifyPrompt(prompt) {
   const text = normalizePrompt(prompt);
+  const questionIntent = hasQuestionIntent(text);
   const research = hasAny(text, RESEARCH_PATTERNS);
   const currentInfo = hasAny(text, CURRENT_INFO_PATTERNS);
   const explicitHostFeature = hasAny(text, HOST_FEATURE_PATTERNS);
-  const claudeGuide = hasQuestionIntent(text) && hasAny(text, GUIDE_PATTERNS);
+  const claudeGuide = questionIntent && hasAny(text, GUIDE_PATTERNS);
   const implement = hasAny(text, IMPLEMENT_PATTERNS);
   const review = hasAny(text, REVIEW_PATTERNS);
   const mcp = hasAny(text, MCP_PATTERNS);
@@ -55,12 +57,31 @@ export function classifyPrompt(prompt) {
   const complex = hasAny(text, COMPLEX_PATTERNS);
   const verify = hasAny(text, VERIFY_PATTERNS);
   const planningIntent = hasAny(text, PLAN_PATTERNS);
+  const scopeHeavy = hasAny(text, [
+    /multi[\s-]?file/,
+    /cross[\s-]?file/,
+    /多文件/,
+    /跨文件/,
+  ]);
   const multiTrackByStructure =
     (research && implement) ||
     (research && verify) ||
     (implement && verify) ||
     (frontend && backend);
   const explicitTeamWorkflow = hasAny(text, TEAM_WORKFLOW_PATTERNS);
+  const decisionHeavy = questionIntent && hasAny(text, DECISION_PATTERNS);
+  const highImpactRestructure =
+    hasAny(text, [
+      /refactor/,
+      /rewrite/,
+      /migrate/,
+      /redesign/,
+      /重构/,
+      /重写/,
+      /迁移/,
+      /重做/,
+    ]) &&
+    (verify || planningIntent || questionIntent);
   const { proactiveTeamWorkflow, teamSemantics } = deriveTeamSignals({
     text,
     frontend,
@@ -72,11 +93,18 @@ export function classifyPrompt(prompt) {
     explicitTeamWorkflow,
     coordinationPatterns: TEAM_COORDINATION_PATTERNS,
   });
-  const plan = complex || multiTrackByStructure || planningIntent;
-  const swarm = hasAny(text, SWARM_PATTERNS) || multiTrackByStructure || teamSemantics;
+  const explicitParallelIntent = hasAny(text, SWARM_PATTERNS) || explicitTeamWorkflow;
+  const plan =
+    planningIntent ||
+    decisionHeavy ||
+    (questionIntent && research && implement) ||
+    (questionIntent && scopeHeavy) ||
+    highImpactRestructure;
+  const swarm =
+    explicitParallelIntent ||
+    (multiTrackByStructure && Boolean(proactiveTeamWorkflow));
   const teamWorkflow = explicitTeamWorkflow;
-  const decisionHeavy = hasQuestionIntent(text) && hasAny(text, DECISION_PATTERNS);
-  const capabilityQuery = explicitHostFeature || (hasQuestionIntent(text) && hasAny(text, HOST_TOPIC_PATTERNS)) || mcp;
+  const capabilityQuery = explicitHostFeature || (questionIntent && hasAny(text, HOST_TOPIC_PATTERNS)) || mcp;
   const codeResearch = research && !capabilityQuery;
   const skillSurface = hasAny(text, SKILL_SURFACE_PATTERNS);
   const skillWorkflowLike = skillSurface || hasAny(text, SKILL_DISCOVERY_PATTERNS);
@@ -114,5 +142,6 @@ export function classifyPrompt(prompt) {
     boundedImplementation,
     toolSearchFirst: capabilityQuery,
     wantsWorktree: hasAny(text, WORKTREE_PATTERNS),
+    webSearchRetry: currentInfo && hasAny(text, RETRY_PATTERNS),
   };
 }

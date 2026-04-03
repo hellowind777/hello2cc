@@ -205,9 +205,9 @@ test('route extracts prompt text from structured payloads', () => {
   const context = output.hookSpecificOutput.additionalContext;
 
   assert.match(context, /默认跟随用户当前语言/);
-  assert.match(context, /并行发起多个原生 `Agent` worker/);
-  assert.match(context, /不要给普通 worker 传 `name` 或 `team_name`/);
-  assert.match(context, /等待完成通知/);
+  assert.match(context, /代码库研究/);
+  assert.match(context, /原生读写 \/ 搜索工具/);
+  assert.match(context, /未验证不要声称已完成/);
   assert.doesNotMatch(context, /TeamCreate/);
 });
 

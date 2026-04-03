@@ -1,11 +1,11 @@
-import { resolveWebSearchGuidanceMode } from './api-topology.mjs';
+import { resolveWebSearchGuidanceState } from './api-topology.mjs';
 
 function buildTaskPlanningStep(signals = {}) {
   if (signals.teamSemantics) {
-    return '这是非 trivial 实现：先 `EnterPlanMode()` 收敛方案；如果随后要进入持续协作型 team 工作流，就把计划落到原生 task board（`TeamCreate` 自带 task list），不要只停留在口头分工。';
+    return '只有当实现路径 genuinely unclear、存在明显架构取舍，或需要先探索再定方案时，才 `EnterPlanMode()` 收敛方案；如果随后确实进入持续协作型 team 工作流，再把计划落到原生 task board（`TeamCreate` 自带 task list），不要只停留在口头分工。';
   }
 
-  return '这是非 trivial 实现：先 `EnterPlanMode()`；如果要把只读规划切给 subagent，优先 `Plan`（只读规划，工具面基本继承 `Explore`）；只有真的需要任务盘时再用 `TaskCreate` / `TaskList` / `TaskUpdate`。';
+  return '只有当实现路径 genuinely unclear、存在明显架构取舍，或需要先探索再定方案时，才 `EnterPlanMode()`；多文件但路径清晰时直接推进，具体分歧再用 `AskUserQuestion`。如果要把只读规划切给 subagent，优先 `Plan`（只读规划，工具面基本继承 `Explore`）；只有真的需要任务盘时再用 `TaskCreate` / `TaskList` / `TaskUpdate`。';
 }
 
 function buildTaskTrackingStep(signals = {}) {
@@ -55,7 +55,7 @@ export function buildSwarmStep(signals) {
   }
 
   return [
-    `这是多线任务：优先在同一条回复里并行发起多个原生 \`Agent\` worker，分别覆盖 ${trackList}。`,
+    `这是明确的多线并行任务：优先在同一条回复里并行发起多个原生 \`Agent\` worker，分别覆盖 ${trackList}。`,
     '普通并行 worker 走 plain subagent 路径：不要给普通 worker 传 `name` 或 `team_name`，避免被宿主误判为 teammate。',
     '研究 / 定位 slice 优先 `Explore`（只读搜索）；规划 slice 优先 `Plan`（只读规划）；边界清晰的实现 / 验证 slice 优先 `General-Purpose`（全工具面）。',
     '启动后简短告诉用户已启动哪些 worker，然后等待完成通知 / 回传消息，不要立刻轮询普通 agent 结果。',
@@ -85,7 +85,9 @@ export function buildCurrentInfoStep(signals, sessionContext = {}) {
     return '';
   }
 
-  const mode = resolveWebSearchGuidanceMode(sessionContext);
+  const { mode } = resolveWebSearchGuidanceState(sessionContext, {
+    retryRequested: signals.webSearchRetry,
+  });
 
   if (mode === 'available') {
     return '这是最新/实时信息任务：优先原生 `WebSearch` 获取当下来源，再组织答案；不要只凭记忆回答这类问题。';
@@ -93,6 +95,14 @@ export function buildCurrentInfoStep(signals, sessionContext = {}) {
 
   if (mode === 'proxy-conditional') {
     return '这是最新/实时信息任务：优先尝试原生 `WebSearch`；只有当它真实返回搜索条目或来源链接时，才按联网结果回答。若界面出现 `Did 0 searches`、无来源或无搜索结果，必须明确说明未完成真实搜索。';
+  }
+
+  if (mode === 'proxy-cooldown') {
+    return '这是最新/实时信息任务：当前代理链路里的原生 `WebSearch` 在本会话最近连续返回 `Did 0 searches` 或错误；先明确说明联网边界，不要在同一条件下机械重试。只有当用户明确要求重试、链路/模型发生变化，或冷却窗口到期后，才做一次探测性 `WebSearch`；若仍无条目或来源，就继续按未联网处理。';
+  }
+
+  if (mode === 'proxy-probe') {
+    return '这是最新/实时信息任务：当前代理链路里的原生 `WebSearch` 最近不稳定，但恢复条件已满足；可以先做一次探测性 `WebSearch`。只有当它真实返回搜索条目或来源链接时，才按联网成功处理；若再次出现 `Did 0 searches`、无来源或无搜索结果，就重新回到边界说明，不要连续重试。';
   }
 
   if (mode === 'not-exposed') {

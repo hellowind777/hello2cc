@@ -76,7 +76,8 @@ export function deriveTeamSignals({
   ]);
   const proactiveTeamWorkflow =
     !explicitTeamWorkflow &&
-    (coordinationHeavy || fullStackProject || multiPhaseProject || refactorProject);
+    coordinationHeavy &&
+    (fullStackProject || multiPhaseProject || refactorProject || implement || research || verify);
 
   return {
     coordinationHeavy,

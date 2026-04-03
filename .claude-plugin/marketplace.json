@@ -10,7 +10,7 @@
     {
       "name": "hello2cc",
       "description": "Silent plugin for third-party models on Claude Code, helping them discover and correctly use host tools, agents, skills, workflows, and MCP.",
-      "version": "0.3.5",
+      "version": "0.3.6",
       "source": "./",
       "author": {
         "name": "hello2cc"

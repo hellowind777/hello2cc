@@ -1,5 +1,5 @@
 import { configuredModels } from './config.mjs';
-import { resolveWebSearchGuidanceMode } from './api-topology.mjs';
+import { resolveWebSearchGuidanceState } from './api-topology.mjs';
 
 /**
  * Builds the opening session model usage guidance shown at session start.
@@ -34,14 +34,14 @@ export function buildWorkingHabitLines() {
     '- 把宿主已暴露的 skills / workflows / plugin tools / MCP tools 视为一等能力；不要因为 hello2cc 存在就绕开它们。',
     '- 有专用读写 / 搜索工具时优先用专用工具，再考虑 shell。',
     '- 优先走最具体的能力表面：已加载的 workflow / slash command / skill 连续体 → 已 surfaced 的 skill → `DiscoverSkills` → 已知 MCP resource → 已加载 / 已 surfaced 的 deferred tool → `ToolSearch` → 更宽的 agent 路径。',
-    '- 非 trivial 任务优先 `EnterPlanMode()`；如果后续是持续协作型 team 工作流，就把计划尽快落到原生 task board，而不是只停留在口头分工。',
+    '- 只有当实现路径 genuinely unclear、存在明显架构取舍，或需要先探索再定方案时，才 `EnterPlanMode()`；多文件但路径清晰时直接推进，具体分歧再 `AskUserQuestion`。',
     '- 不确定可用工具、agent、MCP、权限边界时，优先 `ToolSearch`。',
     '- Claude Code / hooks / MCP / settings / Agent SDK / Claude API 问题优先 `Claude Code Guide`（本地读搜 + `WebFetch` + `WebSearch`）。',
     '- 代码库研究与范围探索优先原生搜索，再按需要转 `Explore`（只读搜索）或 `Plan`（只读规划）。',
     '- 边界清晰的实现、修复、验证切片优先 `General-Purpose`（全工具面）。',
-    '- 多线任务默认优先并行多个原生 `Agent` worker；续派优先 `SendMessage`；跑偏时再 `TaskStop`。',
+    '- 只有当多条线 genuinely independent 且并行能明显缩短关键路径时，才并行多个原生 `Agent` worker；续派优先 `SendMessage`；跑偏时再 `TaskStop`。',
     '- 普通 `Agent` worker 默认不要传 `name` / `team_name`；避免宿主把普通 subagent 误路由成 teammate。',
-    '- 持续协作型多 agent 任务（例如 frontend + backend、research + plan + implement、重构 + 验证、共享任务盘 / owner / handoff）要更像原生 Opus 一样主动偏向 `TeamCreate`，而不是只在用户显式说 team 时才进入团队模式。',
+    '- 只有当任务需要持久 task board / owner / handoff，或用户明确要求 team / teammate / `TeamCreate` 时，才进入 team 模式；前后端并行、研究 + 实现本身不自动等于 team。',
     '- 进入 team 模式后，先 `TeamCreate`，然后 `TaskList` / `TaskCreate` 建立真实 task board，再启动实现 teammate；不要一建团队就只靠正文口头分工。',
     '- 选择 teammate 时遵守原生 agent 工具面：`Explore` / `Plan` 只读，只做搜索或规划；需要改文件、联调、验证的切片交给 `General-Purpose`。',
     '- 真正需要 agent team 时，后续 `Agent` 要显式传入 `name` + `team_name`；团队内任务流转优先 `TaskCreate` / `TaskList` / `TaskUpdate` / `TaskGet`，分派和接力时显式维护 `owner`，补充协作或续派时再 `SendMessage`；完成后及时 `TeamDelete`。不要依赖 `main` / `default` 这类隐式 team 上下文。',
@@ -76,7 +76,7 @@ export function buildToolSearchLines() {
 }
 
 export function buildWebSearchLines(sessionContext = {}) {
-  const mode = resolveWebSearchGuidanceMode(sessionContext);
+  const { mode } = resolveWebSearchGuidanceState(sessionContext);
 
   if (mode === 'available') {
     return [
@@ -94,6 +94,24 @@ export function buildWebSearchLines(sessionContext = {}) {
       '- 仍然优先尝试原生 `WebSearch`；hello2cc 不会因为使用自定义代理就直接阻断这条路径。',
       '- 只有当 `WebSearch` 真正返回搜索条目或来源链接时，才把它当成联网成功；如果界面出现 `Did 0 searches`、无来源或无搜索结果，必须明确说明未完成真实搜索。',
       '- `WebSearch` 只负责实时来源；代码执行、文件读写、MCP 与 agent 协作仍优先走各自原生工具。',
+    ];
+  }
+
+  if (mode === 'proxy-cooldown') {
+    return [
+      '## 实时信息与 WebSearch',
+      '- 当前会话里的代理链路最近连续把原生 `WebSearch` 跑成了 `Did 0 searches` 或错误；不要在同一条件下机械重试。',
+      '- 默认先明确说明联网边界；只有当用户明确要求重试、链路/模型发生变化，或冷却窗口到期后，才做一次探测性 `WebSearch`。',
+      '- 如果探测后仍然没有真实搜索条目或来源，就继续按未联网处理，而不是在同一回合里连续重试。',
+    ];
+  }
+
+  if (mode === 'proxy-probe') {
+    return [
+      '## 实时信息与 WebSearch',
+      '- 当前会话里的代理链路最近不稳定，但恢复条件已满足；可以做一次探测性 `WebSearch` 来确认是否恢复。',
+      '- 只有当这次探测真正返回搜索条目或来源链接时，才按联网成功处理；若再次出现 `Did 0 searches`、无来源或无搜索结果，就重新回到边界说明。',
+      '- hello2cc 不会把这条路径永久判死；它只阻止在同一失败条件下机械重试。',
     ];
   }
 

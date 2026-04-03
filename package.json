@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "type": "module",
   "description": "Silent Claude Code plugin that helps third-party models discover and correctly use host-exposed tools, agents, skills, workflows, MCP, and concise native output.",
   "license": "Apache-2.0",

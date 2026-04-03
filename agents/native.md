@@ -24,12 +24,12 @@ model: inherit
 - 可见文本默认跟随用户当前语言；除非用户明确要求，否则不要无故切换成另一种语言。
 - 不要把内部思考过程直接说出来；工具调用前说明保持一句简短行动描述，避免“我打算 / 我应该 / let’s”式元叙述。
 - 不确定工具、权限、MCP、插件能力或 agent 类型时，优先 `ToolSearch`。
-- 非 trivial 任务优先 `EnterPlanMode()`；只有明确需要任务盘时再用 `TaskCreate` / `TaskList` / `TaskUpdate`。
+- 只有当实现路径 genuinely unclear、存在明显架构取舍，或需要先探索再定方案时，才 `EnterPlanMode()`；多文件但路径清晰时直接推进，具体分歧再 `AskUserQuestion`。
 - 代码库探索优先 `Explore` 或 `Plan`。
 - 边界清晰的实现、修复、验证切片优先 `General-Purpose`。
-- 多线并行任务默认优先并行启动多个原生 `Agent`；启动后等待完成通知回传，续派时优先 `SendMessage`，走错方向时再 `TaskStop`。
+- 只有当多条线 genuinely independent 且并行能明显缩短关键路径时，才并行启动多个原生 `Agent`；启动后等待完成通知回传，续派时优先 `SendMessage`，走错方向时再 `TaskStop`。
 - 普通 `Agent` worker 默认不要传 `name` / `team_name`；避免 Claude Code 宿主把普通 subagent 误判成 teammate。
-- 持续协作型多 agent 任务要更接近原生 Opus：除了用户显式要求 team 之外，遇到 frontend + backend、research + plan + implement、重构 + 验证、共享任务盘 / owner / handoff 这类任务，也应主动偏向 `TeamCreate`。
+- 只有当任务需要持久 task board / owner / handoff，或用户明确要求 team / teammate / `TeamCreate` 时，才进入 team 模式；frontend + backend、research + implement 本身不自动等于 team。
 - 进入 team 模式后，先 `TeamCreate`，再 `TaskList` / `TaskCreate` 建立真实 task board，然后再启动 teammate；不要一建团队就只靠正文口头分工。
 - 选择 teammate 时要匹配原生 agent 工具面：`Explore` / `Plan` 只读，只做搜索或规划；需要改文件、联调、验证的切片交给 `General-Purpose`。
 - 真正需要 agent team 时，后续 `Agent` 调用显式传入 `name` + `team_name`；团队内任务流转优先 `TaskCreate` / `TaskList` / `TaskUpdate` / `TaskGet`，分派或接力时显式维护 `owner`，补充协作或续派时再 `SendMessage`；完成后及时 `TeamDelete`。不要依赖 `main` / `default` 这类隐式 team 上下文。

@@ -195,17 +195,12 @@ export const PLAN_PATTERNS = [
   /architecture/,
   /roadmap/,
   /trade[\s-]?off/,
-  /multi[\s-]?file/,
-  /cross[\s-]?file/,
   /方案/,
   /设计/,
   /架构/,
   /计划/,
   /路线图/,
   /取舍/,
-  /多文件/,
-  /跨文件/,
-  /任务拆分/,
 ];
 
 export const TASK_LIST_PATTERNS = [
@@ -253,4 +248,17 @@ export const CONTINUATION_PATTERNS = [
   /沿着/,
   /接续/,
   /继续这个/,
+];
+
+export const RETRY_PATTERNS = [
+  /retry/,
+  /try again/,
+  /search again/,
+  /re-run/,
+  /重试/,
+  /再试/,
+  /再查/,
+  /再搜/,
+  /重新搜索/,
+  /重新查/,
 ];
