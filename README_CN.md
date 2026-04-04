@@ -228,6 +228,12 @@ claude plugin install hello2cc@hello2cc-local
 }
 ```
 
+如果你在插件配置界面里一时没看到它：
+
+1. 查找名为 `Compatibility Mode` 的字段
+2. 升级或重装到最新本地版本
+3. 在旧版本里继续翻后面的分页字段，因为它之前排在表单较后位置
+
 ### 仍然遇到 `summary is required when message is a string`
 
 请升级到最新版本，重新加载会话，必要时重装插件。  

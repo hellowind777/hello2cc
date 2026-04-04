@@ -228,6 +228,12 @@ Use:
 }
 ```
 
+If you do not see it in the plugin config UI:
+
+1. Check the field named `Compatibility Mode`
+2. Upgrade or reinstall to the latest local version
+3. On older builds, continue through later paged fields because this option used to appear near the end of the form
+
 ### You still hit `summary is required when message is a string`
 
 Update to the latest version, reload the session, and reinstall if needed.  

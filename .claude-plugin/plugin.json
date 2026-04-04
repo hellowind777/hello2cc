@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Thin Claude Code plugin that exposes host state, adapts protocol edges, and debounces repeated failures for third-party models.",
   "author": {
     "name": "hello2cc"
@@ -19,6 +19,12 @@
   ],
   "outputStyles": "./output-styles",
   "userConfig": {
+    "compatibility_mode": {
+      "title": "Compatibility Mode",
+      "type": "string",
+      "description": "插件兼容模式。默认 full；当需要与 OMC 等同类 additionalContext / system-reminder 插件共存时，填写 sanitize-only，仅保留 Agent 参数净化（model / team / isolation），不再注入 SessionStart / UserPromptSubmit / SubagentStart 额外上下文。",
+      "sensitive": false
+    },
     "routing_policy": {
       "title": "Routing Policy",
       "type": "string",
@@ -77,12 +83,6 @@
       "title": "Team Model",
       "type": "string",
       "description": "带 team_name 的原生 Agent 显式 Claude 槽位，仅填写 opus / sonnet / haiku。留空时默认保留 Claude Code 原生 inherit 行为；仅在你想强制覆盖团队 teammate 时填写。",
-      "sensitive": false
-    },
-    "compatibility_mode": {
-      "title": "Compatibility Mode",
-      "type": "string",
-      "description": "插件兼容模式。默认 full；当需要与 OMC 等同类 additionalContext / system-reminder 插件共存时，填写 sanitize-only，仅保留 Agent 参数净化（model / team / isolation），不再注入 SessionStart / UserPromptSubmit / SubagentStart 额外上下文。",
       "sensitive": false
     }
   }
