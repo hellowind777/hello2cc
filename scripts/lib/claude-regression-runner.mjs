@@ -84,7 +84,7 @@ function assertInitSurface(name, initLine) {
   assertRequiredAgents(name, initLine);
 
   if (!Array.isArray(initLine.agents) || !initLine.agents.includes('hello2cc:native')) {
-    fail(`real-session case "${name}" missing namespaced hello2cc main agent`);
+    fail(`real-session case "${name}" missing listed hello2cc native agent`);
   }
 
   assertPluginCacheShape(getHello2ccPluginPath(initLine), name);

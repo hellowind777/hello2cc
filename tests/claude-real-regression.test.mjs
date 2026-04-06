@@ -32,9 +32,6 @@ function createPluginCache(root) {
     name: 'hello2cc',
     version: '0.2.3',
   }), 'utf8');
-  writeFileSync(join(pluginPath, 'settings.json'), JSON.stringify({
-    agent: 'hello2cc:native',
-  }), 'utf8');
   writeFileSync(join(pluginPath, 'agents', 'native.md'), '# hello2cc native\n', 'utf8');
   writeFileSync(join(pluginPath, 'output-styles', 'hello2cc-native.md'), '---\nforce-for-plugin: true\n---\n', 'utf8');
   return pluginPath;

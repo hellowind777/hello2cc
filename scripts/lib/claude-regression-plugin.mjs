@@ -46,13 +46,8 @@ export function assertPluginCacheShape(pluginPath, name) {
   }
 
   const settingsPath = join(pluginPath, 'settings.json');
-  if (!existsSync(settingsPath)) {
-    fail(`real-session case "${name}" missing plugin settings.json`);
-  }
-
-  const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
-  if (settings.agent !== 'hello2cc:native') {
-    fail(`real-session case "${name}" plugin settings did not activate the namespaced hello2cc main agent`);
+  if (existsSync(settingsPath)) {
+    fail(`real-session case "${name}" cached plugin should not ship settings.json or inject a default hello2cc main agent`);
   }
 
   const agentPath = join(pluginPath, 'agents', 'native.md');

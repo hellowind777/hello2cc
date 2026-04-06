@@ -3,7 +3,6 @@ const JSON_FILES = [
   '.claude-plugin/plugin.json',
   '.claude-plugin/marketplace.json',
   'hooks/hooks.json',
-  'settings.json',
 ];
 
 function findInvalidUserConfigEntries(userConfig = {}) {

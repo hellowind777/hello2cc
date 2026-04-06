@@ -15,16 +15,16 @@
 
 ---
 
-## 🆕 0.4.4 相对 0.4.3 的变化
+## 🆕 0.4.5 相对 0.4.4 的变化
 
-这次版本重点不是安装层面的修补，而是运行时行为更贴近原生 Claude Code：
+这次补丁版重点是去掉插件侧不该接管 Claude Code 主线程的默认注入：
 
-| 0.4.4 变化 | 你更容易感受到的结果 |
+| 0.4.5 变化 | 你更容易感受到的结果 |
 |---|---|
-| 更贴近 Claude Code 原生能力策略流 | 第三方模型会更多地在宿主已定义的能力边界内做选择，而不是自己发散重建流程 |
-| 与语言无关的意图判断更强 | 不再更依赖某些固定措辞或关键词命中 |
-| 团队 / task board 连续体更完整 | 持续协作任务更容易维持真实的 team + task board 路径 |
-| subagent 上下文更轻 | team/subagent 场景下更不容易给 Claude Code UI 带来额外重绘压力 |
+| 移除插件随包 `settings.json` 的 agent 注入 | 安装 `hello2cc` 后不再向 Claude Code settings 写入 `agent=hello2cc:native` |
+| 启用 / 禁用行为更贴近原生 Claude Code | 插件状态回到 Claude Code 自己的 plugin loader / enabledPlugins 机制管理 |
+| 重装与缓存形态更干净 | 插件缓存目录里不再包含插件侧 agent 设置文件 |
+| 文档与真实回归校验同步更新 | 仓库已把“无默认 agent 注入”的发布契约补齐到验证链路 |
 
 ---
 
@@ -138,6 +138,8 @@ claude plugins install hello2cc@hello2cc-local
 ### 你会看到什么
 
 - 不需要再额外输入特殊入口命令
+- 安装插件不会再向 Claude Code 的 settings 写入 `agent=hello2cc:native`
+- 插件启用状态继续由 Claude Code 自己管理，而不是由插件随包附带的 `settings.json` 决定
 - 第三方模型更容易直接使用当前会话已暴露的能力
 - 普通并行 agent 更不容易误走错误路径
 - team/subagent 场景更不容易因为注入上下文过重而放大 UI 重绘问题
@@ -180,12 +182,12 @@ claude plugins install hello2cc@hello2cc-local
 }
 ```
 
-### 0.4.4 特别加强了什么
+### 0.4.5 特别加强了什么
 
-- 更贴近 Claude Code 原生“宿主先定边界，模型在边界内做语义选择”的工作方式
-- 让能力选择更少依赖固定关键词，更依赖真实意图
-- 更清楚地区分普通 worker 与真实团队协作路径
-- 压缩 subagent 上下文，降低 team-heavy 场景的额外 UI 压力
+- 不再在安装插件时强行接管默认主线程 agent
+- 插件启用状态继续完全交给 Claude Code 自己的 marketplace / enabledPlugins 管理
+- 保留 `hello2cc:native` 作为可用 agent，而不是静默抢占当前线程
+- 让校验与真实会话回归都与新的安装契约保持一致
 
 ---
 
@@ -232,6 +234,11 @@ claude plugins install hello2cc@hello2cc-local
 2. 确认插件已安装并启用
 3. 如果你是从本地仓库升级，先完整重装一次
 
+### 禁用插件或执行 `/reload` 后，`hello2cc:native` 还显示着
+
+这通常是 Claude Code 当前会话或历史恢复出来的 agent 状态残留，不等于插件又被重新启用了。
+现在的 `hello2cc` 已不再通过插件侧 `settings.json` 强行写入 `agent=hello2cc:native`；完整重装后，新会话不会再继续产生这种默认注入。
+
 ### 模型还是没有使用你想要的 skill、工具或 MCP
 
 先确认：
@@ -263,8 +270,8 @@ claude plugins install hello2cc@hello2cc-local
 
 ### team 或 subagent 场景里界面显得更容易重绘
 
-请升级到 `0.4.4` 后重新加载插件。  
-这个版本已经压缩 subagent 注入上下文，重点缓解 team-heavy 场景下对 Claude Code UI 的额外压力。
+请升级到 `0.4.5` 后重新加载插件。  
+这个版本已经移除旧的插件侧默认 agent 注入路径，新安装不会再强行把 `hello2cc:native` 写进 Claude Code settings。
 
 ---
 
@@ -288,6 +295,13 @@ claude plugins install hello2cc@hello2cc-local
 <summary><strong>安装后还需要手动切 output style 吗？</strong></summary>
 
 通常不需要。安装完成后一般可以直接用。
+
+</details>
+
+<details>
+<summary><strong>安装后会强制把当前主线程切成 <code>hello2cc:native</code> 吗？</strong></summary>
+
+不会。插件只是提供一个可用的 native agent 选项，不再向 Claude Code 注入默认 `agent` 设置。
 
 </details>
 

@@ -15,16 +15,16 @@ Its job is simpler:
 
 ---
 
-## 🆕 What changed in 0.4.4
+## 🆕 What changed in 0.4.5
 
-Compared with `0.4.3`, this release focuses on real runtime behavior rather than install-time polish:
+Compared with `0.4.4`, this patch release focuses on removing unintended plugin-side takeover:
 
-| 0.4.4 change | What you should notice |
+| 0.4.5 change | What you should notice |
 |---|---|
-| Closer alignment with Claude Code's native capability policy flow | Third-party models are guided to choose within host-defined boundaries instead of drifting into broad, improvised routing |
-| Language-agnostic intent handling | Capability selection depends less on exact wording and more on what the user is actually trying to do |
-| Stronger team/task-board continuity | Sustained collaboration is more likely to stay on real team + task-board paths instead of collapsing into plain worker chatter |
-| Lighter subagent context payload | Team/subagent sessions put less pressure on Claude Code's UI and reduce avoidable redraw noise |
+| Removed plugin-shipped `settings.json` agent injection | Installing `hello2cc` no longer writes `agent=hello2cc:native` into Claude Code settings |
+| Closer enable/disable behavior to native Claude Code | Plugin state follows Claude Code's own plugin loader instead of a bundled default-agent override |
+| Cleaner reinstall and cache shape | Cached plugin installs no longer include a plugin-side agent setting file |
+| Updated docs and real-session regression coverage | The repository now validates the new no-default-agent contract end to end |
 
 ---
 
@@ -138,6 +138,8 @@ Then reopen Claude Code or run `/reload-plugins`.
 ### Expected result
 
 - No extra manual entry point is required
+- Installing the plugin does not write `agent=hello2cc:native` into Claude Code settings
+- Plugin enablement stays under Claude Code's own plugin state, not a plugin-shipped `settings.json`
 - Third-party models are more likely to use session-visible capabilities directly
 - Ordinary parallel agents are less likely to be misrouted
 - Team/subagent sessions are less likely to suffer from oversized injected context
@@ -180,12 +182,12 @@ Good when multiple plugins add extra guidance and the session starts feeling noi
 }
 ```
 
-### What 0.4.4 especially improves
+### What 0.4.5 especially improves
 
-- Keeps routing closer to Claude Code's native "host defines boundaries, model selects within them" behavior
-- Makes capability selection less dependent on exact keywords or one-language phrasing
-- Preserves a clearer split between plain workers and true team workflows
-- Reduces subagent-context weight in team-heavy sessions
+- Stops plugin installation from forcing a default main-thread agent
+- Keeps plugin enablement under Claude Code's own marketplace and enabled-plugin state
+- Preserves `hello2cc:native` as an available agent without silently taking over the current thread
+- Keeps validation and real-session regression aligned with the new install contract
 
 ---
 
@@ -232,6 +234,11 @@ Try these in order:
 2. Confirm the plugin is installed and enabled
 3. If you upgraded from a local clone, reinstall it cleanly
 
+### `hello2cc:native` still shows after disable or `/reload`
+
+That banner can persist in the current or resumed session because Claude Code keeps session agent state separately from plugin enablement.
+Current `hello2cc` no longer ships a plugin-side `settings.json` to force `agent=hello2cc:native`, so a clean reinstall or a fresh session stops new unintended agent injection.
+
 ### The model still ignores a skill, tool, or MCP resource
 
 Check whether:
@@ -263,8 +270,8 @@ Recent versions add a compatibility layer for plain-text `SendMessage`.
 
 ### Team or subagent sessions feel visually noisy
 
-Update to `0.4.4`, then reload the plugin cleanly.
-This version trims subagent context payloads to reduce avoidable Claude Code UI redraw pressure, especially in team-heavy sessions.
+Update to `0.4.5`, then reload the plugin cleanly.
+This version removes the old plugin-side default-agent injection path, so new installs no longer force `hello2cc:native` into Claude Code settings.
 
 ---
 
@@ -288,6 +295,13 @@ No. It only helps the model use capabilities that are already available in the c
 <summary><strong>Do I need to switch an output style manually?</strong></summary>
 
 Usually no. After installation, it should work without an extra manual entry point.
+
+</details>
+
+<details>
+<summary><strong>Will installation force-select <code>hello2cc:native</code> for the current thread?</strong></summary>
+
+No. The plugin ships the native agent as an available option, but it no longer injects a default `agent` setting into Claude Code.
 
 </details>
 

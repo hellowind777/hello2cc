@@ -17,11 +17,11 @@ const LIFECYCLE_SCRIPTS = [
 ];
 
 /**
- * Validates that hello2cc ships the native main agent and activates it by default.
+ * Validates that hello2cc ships the native main agent without forcing default selection.
  */
 export function validateAgents(context) {
   if (!context.exists('agents')) {
-    context.fail('agents directory should exist to provide the default main-thread agent');
+    context.fail('agents directory should exist to provide hello2cc native agent guidance');
   } else if (!context.exists('agents/native.md')) {
     context.fail('missing agents/native.md');
   } else {
@@ -43,18 +43,10 @@ export function validateAgents(context) {
     context.fail('legacy-agents directory should not ship in the native-first public release');
   }
 
-  if (!context.exists('settings.json')) {
-    context.fail('settings.json should exist and activate the default hello2cc main agent');
-    return;
-  }
-
-  const settings = context.readJson('settings.json');
-  if (!settings) return;
-
-  if (settings.agent !== 'hello2cc:native') {
-    context.fail('settings.json should activate namespaced agent hello2cc:native');
+  if (context.exists('settings.json')) {
+    context.fail('settings.json must not ship because hello2cc should not inject a default main-thread agent');
   } else {
-    context.ok('plugin default agent setting');
+    context.ok('no plugin default agent injection');
   }
 }
 
