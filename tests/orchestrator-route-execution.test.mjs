@@ -523,7 +523,7 @@ test('route keeps active-team continuity from hijacking non-team-owned specializ
       ],
     },
     {
-      prompt: 'Prepare the 0.4.3 release and summarize status first.',
+      prompt: 'Prepare the 0.4.4 release and summarize status first.',
       specialization: 'release',
       role: 'general_operator',
       orderedSteps: [

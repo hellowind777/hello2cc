@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.4.4 - 2026-04-06
+
+- 进一步把 hello2cc 对齐到原生 Claude Code 的能力策略流：由宿主先定义能力边界与优先级，再让模型在受约束空间内做语义选择，而不是靠关键词硬路由
+- 强化 language-agnostic 的意图分析与已暴露能力优先级，在 skills / workflows / MCP / ToolSearch / Agent / TeamCreate 之间更接近原生 Opus 的选择方式
+- 下沉 team follow-up、idle、plan approval、shutdown rejection 等团队连续体状态，让第三方模型在持续协作场景下更容易维持真实 task board 与 teammate 流程
+- 压缩 subagent / teammate 注入上下文，缓解 team/subagent 场景下 Claude Code 顶部内容过快重绘的问题
+
 ## 0.4.3 - 2026-04-04
 
 - 围绕 #10 调整插件配置项顺序，将 `compatibility_mode` 前移到表单首位，减少“字段不存在”的误判

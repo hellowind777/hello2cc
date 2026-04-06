@@ -15,6 +15,19 @@ Its job is simpler:
 
 ---
 
+## 🆕 What changed in 0.4.4
+
+Compared with `0.4.3`, this release focuses on real runtime behavior rather than install-time polish:
+
+| 0.4.4 change | What you should notice |
+|---|---|
+| Closer alignment with Claude Code's native capability policy flow | Third-party models are guided to choose within host-defined boundaries instead of drifting into broad, improvised routing |
+| Language-agnostic intent handling | Capability selection depends less on exact wording and more on what the user is actually trying to do |
+| Stronger team/task-board continuity | Sustained collaboration is more likely to stay on real team + task-board paths instead of collapsing into plain worker chatter |
+| Lighter subagent context payload | Team/subagent sessions put less pressure on Claude Code's UI and reduce avoidable redraw noise |
+
+---
+
 ## 🎯 Why use hello2cc?
 
 | Common problem | What hello2cc improves |
@@ -23,6 +36,7 @@ Its job is simpler:
 | The session already exposes MCP resources or tools, but the model still takes a detour | Nudges the model toward the most direct path first |
 | Plain parallel workers get confused with team or teammate semantics | Reduces avoidable agent routing mistakes |
 | The model can answer, but does not pick the right Claude Code capability | Makes tool, agent, workflow, and MCP usage feel more natural |
+| The model depends too much on wording or keyword hints | Pushes it toward language-agnostic intent matching inside Claude Code's visible capability boundaries |
 | Several plugins are installed and the model receives mixed guidance | Offers a quieter compatibility mode for coexistence |
 | The model drifts into verbose meta narration | Keeps responses closer to concise native Claude Code style |
 
@@ -81,7 +95,7 @@ Stronger preference for capabilities that are already available in the session.
 
 ### Agents & teams
 
-Keeps one-shot parallel work on ordinary agent paths, while sustained collaboration is more likely to use a team flow.
+Keeps one-shot parallel work on ordinary agent paths, while sustained collaboration is more likely to use a real team + task-board flow.
 
 </td>
 <td width="50%">
@@ -108,7 +122,7 @@ cd hello2cc
 ### 2) Add the local marketplace
 
 ```bash
-claude plugin marketplace add "<repo-path>"
+claude plugins marketplace add "<repo-path>"
 ```
 
 Replace `<repo-path>` with your local `hello2cc` repository path.
@@ -116,16 +130,17 @@ Replace `<repo-path>` with your local `hello2cc` repository path.
 ### 3) Install the plugin
 
 ```bash
-claude plugin install hello2cc@hello2cc-local
+claude plugins install hello2cc@hello2cc-local
 ```
 
-Then reopen Claude Code or run `/reload`.
+Then reopen Claude Code or run `/reload-plugins`.
 
 ### Expected result
 
 - No extra manual entry point is required
 - Third-party models are more likely to use session-visible capabilities directly
 - Ordinary parallel agents are less likely to be misrouted
+- Team/subagent sessions are less likely to suffer from oversized injected context
 
 ---
 
@@ -165,6 +180,13 @@ Good when multiple plugins add extra guidance and the session starts feeling noi
 }
 ```
 
+### What 0.4.4 especially improves
+
+- Keeps routing closer to Claude Code's native "host defines boundaries, model selects within them" behavior
+- Makes capability selection less dependent on exact keywords or one-language phrasing
+- Preserves a clearer split between plain workers and true team workflows
+- Reduces subagent-context weight in team-heavy sessions
+
 ---
 
 ## 🔧 How it fits into your workflow
@@ -190,13 +212,13 @@ flowchart LR
 If you changed the local repository or want a clean reinstall:
 
 ```bash
-claude plugin uninstall --scope user hello2cc@hello2cc-local
-claude plugin marketplace remove hello2cc-local
-claude plugin marketplace add "<repo-path>"
-claude plugin install hello2cc@hello2cc-local
+claude plugins uninstall --scope user hello2cc@hello2cc-local
+claude plugins marketplace remove hello2cc-local
+claude plugins marketplace add "<repo-path>"
+claude plugins install hello2cc@hello2cc-local
 ```
 
-Then reopen Claude Code or run `/reload`.
+Then reopen Claude Code or run `/reload-plugins`.
 
 ---
 
@@ -206,7 +228,7 @@ Then reopen Claude Code or run `/reload`.
 
 Try these in order:
 
-1. Reopen Claude Code or run `/reload`
+1. Reopen Claude Code or run `/reload-plugins`
 2. Confirm the plugin is installed and enabled
 3. If you upgraded from a local clone, reinstall it cleanly
 
@@ -238,6 +260,11 @@ If you do not see it in the plugin config UI:
 
 Update to the latest version, reload the session, and reinstall if needed.  
 Recent versions add a compatibility layer for plain-text `SendMessage`.
+
+### Team or subagent sessions feel visually noisy
+
+Update to `0.4.4`, then reload the plugin cleanly.
+This version trims subagent context payloads to reduce avoidable Claude Code UI redraw pressure, especially in team-heavy sessions.
 
 ---
 

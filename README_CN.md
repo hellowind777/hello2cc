@@ -15,6 +15,19 @@
 
 ---
 
+## 🆕 0.4.4 相对 0.4.3 的变化
+
+这次版本重点不是安装层面的修补，而是运行时行为更贴近原生 Claude Code：
+
+| 0.4.4 变化 | 你更容易感受到的结果 |
+|---|---|
+| 更贴近 Claude Code 原生能力策略流 | 第三方模型会更多地在宿主已定义的能力边界内做选择，而不是自己发散重建流程 |
+| 与语言无关的意图判断更强 | 不再更依赖某些固定措辞或关键词命中 |
+| 团队 / task board 连续体更完整 | 持续协作任务更容易维持真实的 team + task board 路径 |
+| subagent 上下文更轻 | team/subagent 场景下更不容易给 Claude Code UI 带来额外重绘压力 |
+
+---
+
 ## 🎯 为什么使用 hello2cc
 
 | 常见问题 | hello2cc 的改善 |
@@ -23,6 +36,7 @@
 | 明明 MCP resource 或工具已经可直接调用，模型却还在绕路 | 更容易优先走当前会话里已经可用的能力 |
 | 普通并行 worker 被误判成 team / teammate 语义 | 减少可避免的 agent 路由错误 |
 | 模型能回答，但不会选合适的 Claude Code 能力入口 | 让工具、agent、workflow、MCP 的使用更自然 |
+| 模型过度依赖固定措辞或关键词提示 | 更倾向根据真实意图，在 Claude Code 已暴露能力边界内做选择 |
 | 多个插件同时启用，提示互相打架 | 提供更安静的兼容模式 |
 | 对话里元叙述过多 | 更接近简洁、行动优先的原生风格 |
 
@@ -81,7 +95,7 @@
 
 ### Agents 与 teams
 
-一次性并行任务更容易保留普通 agent 路径，持续协作任务更容易走团队路径。
+一次性并行任务更容易保留普通 agent 路径，持续协作任务更容易走真实的 team + task board 路径。
 
 </td>
 <td width="50%">
@@ -108,7 +122,7 @@ cd hello2cc
 ### 2）添加本地 marketplace
 
 ```bash
-claude plugin marketplace add "<repo-path>"
+claude plugins marketplace add "<repo-path>"
 ```
 
 把 `<repo-path>` 替换成你本地 `hello2cc` 仓库路径。
@@ -116,16 +130,17 @@ claude plugin marketplace add "<repo-path>"
 ### 3）安装插件
 
 ```bash
-claude plugin install hello2cc@hello2cc-local
+claude plugins install hello2cc@hello2cc-local
 ```
 
-然后重开 Claude Code，或执行 `/reload`。
+然后重开 Claude Code，或执行 `/reload-plugins`。
 
 ### 你会看到什么
 
 - 不需要再额外输入特殊入口命令
 - 第三方模型更容易直接使用当前会话已暴露的能力
 - 普通并行 agent 更不容易误走错误路径
+- team/subagent 场景更不容易因为注入上下文过重而放大 UI 重绘问题
 
 ---
 
@@ -165,6 +180,13 @@ claude plugin install hello2cc@hello2cc-local
 }
 ```
 
+### 0.4.4 特别加强了什么
+
+- 更贴近 Claude Code 原生“宿主先定边界，模型在边界内做语义选择”的工作方式
+- 让能力选择更少依赖固定关键词，更依赖真实意图
+- 更清楚地区分普通 worker 与真实团队协作路径
+- 压缩 subagent 上下文，降低 team-heavy 场景的额外 UI 压力
+
 ---
 
 ## 🔧 它如何融入你的日常使用
@@ -190,13 +212,13 @@ flowchart LR
 如果你修改了本地仓库，或者想完整重装：
 
 ```bash
-claude plugin uninstall --scope user hello2cc@hello2cc-local
-claude plugin marketplace remove hello2cc-local
-claude plugin marketplace add "<repo-path>"
-claude plugin install hello2cc@hello2cc-local
+claude plugins uninstall --scope user hello2cc@hello2cc-local
+claude plugins marketplace remove hello2cc-local
+claude plugins marketplace add "<repo-path>"
+claude plugins install hello2cc@hello2cc-local
 ```
 
-然后重开 Claude Code，或执行 `/reload`。
+然后重开 Claude Code，或执行 `/reload-plugins`。
 
 ---
 
@@ -206,7 +228,7 @@ claude plugin install hello2cc@hello2cc-local
 
 按这个顺序检查：
 
-1. 重开 Claude Code 或执行 `/reload`
+1. 重开 Claude Code 或执行 `/reload-plugins`
 2. 确认插件已安装并启用
 3. 如果你是从本地仓库升级，先完整重装一次
 
@@ -238,6 +260,11 @@ claude plugin install hello2cc@hello2cc-local
 
 请升级到最新版本，重新加载会话，必要时重装插件。  
 新版本已为纯文本 `SendMessage` 增加兼容处理。
+
+### team 或 subagent 场景里界面显得更容易重绘
+
+请升级到 `0.4.4` 后重新加载插件。  
+这个版本已经压缩 subagent 注入上下文，重点缓解 team-heavy 场景下对 Claude Code UI 的额外压力。
 
 ---
 

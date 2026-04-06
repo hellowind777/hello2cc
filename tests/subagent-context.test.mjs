@@ -566,7 +566,7 @@ test('subagent-context derives release task intent into status-first guidance', 
   const env = isolatedEnv();
   const output = run('general', {
     session_id: 'release-worker',
-    task_description: 'Prepare the release status, checklist, and notes for version 0.4.2.',
+    task_description: 'Prepare the release status, checklist, and notes for version 0.4.4.',
   }, env);
   const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 

@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Thin Claude Code plugin that exposes host state, adapts protocol edges, and debounces repeated failures for third-party models.",
   "author": {
     "name": "hello2cc"
