@@ -5,6 +5,7 @@ import {
   hasVisibleTeamWorkflowSurface,
   requestNeedsParallelWorkers,
   requestNeedsPlanning,
+  requestNeedsTaskTracking,
   requestNeedsTeamWorkflow,
   uniqueStrings,
   visibleTaskBoardTools,
@@ -94,8 +95,16 @@ export const EXECUTION_POLICY_DEFINITIONS = [
       const trackingTool = sessionContext?.taskCreateAvailable ? 'TaskCreate / TaskList / TaskUpdate' : (sessionContext?.todoWriteAvailable ? 'TodoWrite' : '');
       if (!trackingTool) return lines;
 
-      if (requestNeedsPlanning(requestProfile) || requestNeedsTeamWorkflow(requestProfile)) {
-        lines.push(`把当前任务按多步任务处理：优先用 \`${trackingTool}\` 维护真实任务状态，而不是把计划藏在长段落里。`);
+      if (requestNeedsTaskTracking(requestProfile)) {
+        lines.push(`把当前任务按多步任务处理：优先用 \`${trackingTool}\` 维护真实任务状态，而不是把计划或进度藏在长段落里。`);
+      }
+
+      if (
+        requestNeedsTaskTracking(requestProfile) &&
+        requestNeedsParallelWorkers(requestProfile) &&
+        !requestNeedsTeamWorkflow(requestProfile)
+      ) {
+        lines.push(`复杂但非 team 的并行任务先用 \`${trackingTool}\` 建真实任务状态，再只把真正独立的切片 fan-out 给 worker；不要一上来对同一问题并行开多个 agent。`);
       }
       return lines;
     },

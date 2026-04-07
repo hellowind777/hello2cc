@@ -163,6 +163,31 @@ test('route keeps lexicon-only current-info requests on visible WebSearch surfac
   assert.equal(state.response_contract.preferred_shape, 'current_info_status_then_sources_then_uncertainty');
 });
 
+test('route derives slash-pair current-info comparisons into WebSearch query hygiene guidance', () => {
+  const env = isolatedEnv();
+  const output = run('route', {
+    session_id: 'route-zh-compare-current-info',
+    tools: ['WebSearch'],
+    prompt: '帮我搜索最新新闻，并对比下Codex/claude最新的技术',
+  }, env);
+  const context = output.hookSpecificOutput.additionalContext;
+  const state = parseAdditionalContextJson(context);
+
+  assert.equal(state.intent.analysis.lexicon_guided, undefined);
+  assert.equal(state.intent.analysis.host_boundary_guided, true);
+  assert.equal(state.intent.analysis.prompt_shape.option_pair_like, true);
+  assert.equal(state.intent.actions.compare, true);
+  assert.equal(state.intent.actions.current_info, true);
+  assert.equal(state.intent.output.table, true);
+  assert.equal(state.response_contract.specialization, 'compare');
+  assert.equal(state.response_contract.selection_basis, 'weak_request_shape');
+  assert.ok(state.policy.policies.some((policy) => policy.id === 'websearch' && policy.current_info_request));
+  assert.ok(state.specialization_candidates.items.some((item) => item.id === 'current_info'));
+  assert.match(context, /先拆成多次短 `WebSearch` 获取真实来源/);
+  assert.match(context, /allowed_domains/);
+  assert.match(context, /Did 0 searches/);
+});
+
 test('route exposes transcript attachment reminders and surfaced agent deltas in host state', () => {
   const env = isolatedEnv();
   const sessionId = 'route-attachment-signals';

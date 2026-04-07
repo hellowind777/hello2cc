@@ -15,16 +15,16 @@
 
 ---
 
-## 🆕 0.4.5 相对 0.4.4 的变化
+## 🆕 0.4.6 相对 0.4.5 的变化
 
-这次补丁版重点是去掉插件侧不该接管 Claude Code 主线程的默认注入：
+这次补丁版重点是把 current-info、WebSearch 和多步骤执行继续往原生 Claude Code 的行为上收紧：
 
-| 0.4.5 变化 | 你更容易感受到的结果 |
+| 0.4.6 变化 | 你更容易感受到的结果 |
 |---|---|
-| 移除插件随包 `settings.json` 的 agent 注入 | 安装 `hello2cc` 后不再向 Claude Code settings 写入 `agent=hello2cc:native` |
-| 启用 / 禁用行为更贴近原生 Claude Code | 插件状态回到 Claude Code 自己的 plugin loader / enabledPlugins 机制管理 |
-| 重装与缓存形态更干净 | 插件缓存目录里不再包含插件侧 agent 设置文件 |
-| 文档与真实回归校验同步更新 | 仓库已把“无默认 agent 注入”的发布契约补齐到验证链路 |
+| current-info 搜索整形更严格 | 对比类问题更容易先发起短而真实的搜索，而不是把整段需求塞进单条 query |
+| `Did 0 searches` 恢复更稳 | 空搜索或失败搜索不再更容易被误当成“已经搜到了结果” |
+| task tracking 与 team 路由进一步解耦 | 复杂多步骤任务更容易先走 task tracking，只有真正需要协作时才升级到 team |
+| 结构化语义信号继续增强 | 对 slash-pair 对比和结构化输入的判断更少依赖关键词命中 |
 
 ---
 
@@ -172,12 +172,12 @@ claude plugins install hello2cc@hello2cc-local
 如果真实模型落点由 **CCSwitch** 控制，就继续把真实映射放在 CCSwitch 里。  
 在 `hello2cc` 里优先使用稳定的 Claude 槽位值，例如 `inherit`、`opus`、`sonnet`、`haiku`。
 
-### 0.4.5 特别加强了什么
+### 0.4.6 特别加强了什么
 
-- 不再在安装插件时强行接管默认主线程 agent
-- 插件启用状态继续完全交给 Claude Code 自己的 marketplace / enabledPlugins 管理
-- 保留 `hello2cc:native` 作为可用 agent，而不是静默抢占当前线程
-- 让校验与真实会话回归都与新的安装契约保持一致
+- 对 current-info / 对比题先收敛成更干净的真实搜索步骤
+- 当 `WebSearch` 返回 `Did 0 searches` 时更安全地恢复
+- 对复杂但非 team 的任务先偏向 task tracking，再决定是否 fan-out 普通 agent
+- 更少依赖关键词，更偏向结构化意图判断
 
 ---
 
@@ -247,10 +247,10 @@ claude plugins install hello2cc@hello2cc-local
 请升级到最新版本，重新加载会话，必要时重装插件。  
 新版本已为纯文本 `SendMessage` 增加兼容处理。
 
-### team 或 subagent 场景里界面显得更容易重绘
+### current-info 或对比题经常搜不到结果
 
-请升级到 `0.4.5` 后重新加载插件。  
-这个版本已经移除旧的插件侧默认 agent 注入路径，新安装不会再强行把 `hello2cc:native` 写进 Claude Code settings。
+请升级到 `0.4.6` 后重新加载插件。  
+这个版本进一步收紧了短 query 规则，并把 `Did 0 searches` 明确视为一次空搜索而不是成功结果。
 
 ---
 

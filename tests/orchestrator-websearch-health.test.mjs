@@ -142,6 +142,13 @@ test('successful proxy WebSearch clears degraded session memory', () => {
     model: 'opus',
     prompt: '帮我查一下今天 AI 新闻',
   }, env);
+  const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
-  assert.deepEqual(output, { suppressOutput: true });
+  assert.equal(state.response_contract.specialization, 'current_info');
+  assert.ok(
+    state.specialization_candidates.items.some(
+      (item) => item.id === 'current_info' && item.reasons.includes('websearch:proxy-conditional'),
+    ),
+  );
+  assert.ok(!state.recovery_playbook.recipes.some((recipe) => recipe.guard === 'websearch_retry_cooldown'));
 });

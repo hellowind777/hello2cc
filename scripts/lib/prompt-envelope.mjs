@@ -37,8 +37,18 @@ function listLike(value) {
   return /(^|\n)(\d+\. |- |\* )/u.test(String(value || ''));
 }
 
+function windowsOrUnixPathPattern() {
+  return /(?:[A-Za-z]:[\\/]|(?:^|[\s(`])[./~]?[\w./-]+\.[A-Za-z0-9]+(?::\d+(?::\d+)?)?)/u;
+}
+
 function structuredArtifact(value) {
-  return /`[^`]+`|[A-Za-z]:\\|(?:^|[\s(])[./~]?[\w./-]+\.[A-Za-z0-9]+|[#@][\w.-]+|\b\d+(?:\.\d+){1,}\b/u.test(String(value || ''));
+  const pattern = [
+    '`[^`]+`',
+    windowsOrUnixPathPattern().source,
+    '[#@][\\w.-]+',
+    '\\b\\d+(?:\\.\\d+){1,}\\b',
+  ].join('|');
+  return new RegExp(pattern, 'u').test(String(value || ''));
 }
 
 function questionLike(value) {
@@ -46,7 +56,7 @@ function questionLike(value) {
 }
 
 function pathArtifactCount(value) {
-  const matches = String(value || '').match(/(?:[A-Za-z]:\\|(?:^|[\s(`])[./~]?[\w./-]+\.[A-Za-z0-9]+(?::\d+(?::\d+)?)?)/ug);
+  const matches = String(value || '').match(new RegExp(windowsOrUnixPathPattern().source, 'ug'));
   return Array.isArray(matches) ? matches.length : 0;
 }
 
@@ -60,6 +70,10 @@ function codeFenceLike(value) {
 
 function diffLike(value) {
   return /(^|\n)(diff --git|@@ |--- [^\n]+|\+\+\+ [^\n]+)/u.test(String(value || ''));
+}
+
+function optionPairLike(value) {
+  return /(?<![:\\])[\p{L}\p{N}][\p{L}\p{N}#+._-]{1,40}\/[\p{L}\p{N}][\p{L}\p{N}#+._-]{1,40}(?![\\/])/u.test(String(value || ''));
 }
 
 function surfacedNames(sessionContext = {}) {
@@ -86,6 +100,7 @@ export function analyzePromptEnvelope(prompt, sessionContext = {}) {
   const lineReference = lineReferenceLike(rawText);
   const codeFence = codeFenceLike(rawText);
   const diffArtifact = diffLike(rawText);
+  const optionPair = optionPairLike(rawText);
   const reviewArtifact = Boolean(
     diffArtifact ||
     (codeFence && (lineReference || pathArtifacts > 0)),
@@ -135,6 +150,7 @@ export function analyzePromptEnvelope(prompt, sessionContext = {}) {
     broadArtifactQuestion,
     reviewArtifact,
     repoArtifactHeavy,
+    optionPairLike: optionPair,
   };
 }
 
@@ -152,5 +168,6 @@ export function summarizePromptEnvelope(envelope = {}) {
     broad_artifact_question: envelope?.broadArtifactQuestion || undefined,
     review_artifact: envelope?.reviewArtifact || undefined,
     repo_artifact_heavy: envelope?.repoArtifactHeavy || undefined,
+    option_pair_like: envelope?.optionPairLike || undefined,
   };
 }

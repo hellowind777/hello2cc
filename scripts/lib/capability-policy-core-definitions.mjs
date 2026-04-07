@@ -6,6 +6,7 @@ import {
   requestNeedsGuideSurface,
   requestNeedsParallelWorkers,
   requestNeedsPlanning,
+  requestNeedsTaskTracking,
   requestNeedsTeamWorkflow,
   requestNeedsWorkflowRouting,
   requestOutputShape,
@@ -38,6 +39,7 @@ export const CORE_POLICY_DEFINITIONS = [
         requestNeedsCapabilityDiscovery(requestProfile) ||
         requestNeedsWorkflowRouting(requestProfile) ||
         requestNeedsTeamWorkflow(requestProfile) ||
+        requestNeedsTaskTracking(requestProfile) ||
         requestNeedsParallelWorkers(requestProfile) ||
         requestNeedsDecisionHelp(requestProfile),
       );
@@ -68,6 +70,10 @@ export const CORE_POLICY_DEFINITIONS = [
 
       if (requestProfile?.compare) {
         lines.push('把当前任务按比较 / 选型 / 能力边界问题处理：默认直接回答，必要时用紧凑 Markdown 对比表；不要先进入 plan。');
+      }
+
+      if (requestNeedsTaskTracking(requestProfile) && !requestNeedsTeamWorkflow(requestProfile)) {
+        lines.push('复杂多步但非 team 的任务先用宿主 task tracking 立住真实状态，再决定是否需要并行 worker；不要因为能并行就跳过任务板。');
       }
 
       return lines;

@@ -111,8 +111,7 @@ export function requestNeedsTeamWorkflow(requestProfile = {}) {
   return Boolean(
     requestProfile?.teamSemantics ||
     requestProfile?.teamWorkflow ||
-    requestProfile?.proactiveTeamWorkflow ||
-    requestProfile?.taskList,
+    requestProfile?.proactiveTeamWorkflow,
   );
 }
 
@@ -150,6 +149,33 @@ export function requestNeedsWorkflowRouting(requestProfile = {}) {
 
 export function requestNeedsPlanning(requestProfile = {}) {
   return Boolean(requestProfile?.plan);
+}
+
+/**
+ * Prefers native task tracking for complex multi-step work without conflating it with team workflow.
+ */
+export function requestNeedsTaskTracking(requestProfile = {}) {
+  const trackedComplexExecution = Boolean(
+    requestProfile?.complex &&
+    (
+      requestProfile?.codeResearch ||
+      requestProfile?.research ||
+      requestProfile?.review ||
+      requestProfile?.release ||
+      requestNeedsParallelWorkers(requestProfile) ||
+      (
+        requestProfile?.artifactShapeGuided &&
+        (requestProfile?.implement || requestProfile?.verify)
+      )
+    )
+  );
+
+  return Boolean(
+    requestProfile?.taskList ||
+    requestNeedsPlanning(requestProfile) ||
+    requestNeedsTeamWorkflow(requestProfile) ||
+    trackedComplexExecution
+  );
 }
 
 export function requestNeedsDecisionHelp(requestProfile = {}) {

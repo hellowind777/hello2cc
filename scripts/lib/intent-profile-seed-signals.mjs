@@ -20,10 +20,13 @@ export function buildIntentProfileSeed(prompt, sessionContext = {}) {
   const structure = new Set(slots.structure);
   const lexicalStructure = slots.structure.filter((concept) => concept !== 'capability_query');
   const guideTopic =
-    topics.has('claude_code') ||
-    topics.has('hooks') ||
-    topics.has('api_sdk') ||
-    topics.has('settings');
+    !promptEnvelope.repoArtifactHeavy &&
+    (
+      topics.has('claude_code') ||
+      topics.has('hooks') ||
+      topics.has('api_sdk') ||
+      topics.has('settings')
+    );
 
   return {
     slots,
@@ -40,7 +43,12 @@ export function buildIntentProfileSeed(prompt, sessionContext = {}) {
     ),
     questionIntent: slots.questionIntent || promptEnvelope.questionLike,
     planRequest: actions.has('plan'),
-    compare: actions.has('compare'),
+    compare: actions.has('compare') || (
+      promptEnvelope.optionPairLike &&
+      !promptEnvelope.structuredArtifact &&
+      !promptEnvelope.repoArtifactHeavy &&
+      Number(promptEnvelope.pathArtifactCount || 0) === 0
+    ),
     verify: actions.has('verify'),
     mcp: topics.has('mcp'),
     skillSurface: topics.has('skills'),

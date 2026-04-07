@@ -15,16 +15,16 @@ Its job is simpler:
 
 ---
 
-## 🆕 What changed in 0.4.5
+## 🆕 What changed in 0.4.6
 
-Compared with `0.4.4`, this patch release focuses on removing unintended plugin-side takeover:
+Compared with `0.4.5`, this patch release focuses on making current-info, web search, and multi-step execution align more closely with native Claude Code behavior:
 
-| 0.4.5 change | What you should notice |
+| 0.4.6 change | What you should notice |
 |---|---|
-| Removed plugin-shipped `settings.json` agent injection | Installing `hello2cc` no longer writes `agent=hello2cc:native` into Claude Code settings |
-| Closer enable/disable behavior to native Claude Code | Plugin state follows Claude Code's own plugin loader instead of a bundled default-agent override |
-| Cleaner reinstall and cache shape | Cached plugin installs no longer include a plugin-side agent setting file |
-| Updated docs and real-session regression coverage | The repository now validates the new no-default-agent contract end to end |
+| Stronger current-info web search shaping | Compare-style prompts are more likely to start with short real searches instead of overloaded queries |
+| Better `Did 0 searches` recovery | Failed or empty web-search turns are less likely to be mistaken for valid search results |
+| Task tracking separated from team routing | Complex multi-step work is more likely to stay on task tracking unless true team collaboration is needed |
+| More language-agnostic structural intent signals | Slash-pair comparisons and structured prompts are routed more reliably without depending on keyword matches |
 
 ---
 
@@ -172,12 +172,12 @@ Good when you want most agents to use the same Claude slot.
 If your real target model is mapped through **CCSwitch**, keep the actual mapping there.  
 In `hello2cc`, prefer stable Claude slot values such as `inherit`, `opus`, `sonnet`, or `haiku`.
 
-### What 0.4.5 especially improves
+### What 0.4.6 especially improves
 
-- Stops plugin installation from forcing a default main-thread agent
-- Keeps plugin enablement under Claude Code's own marketplace and enabled-plugin state
-- Preserves `hello2cc:native` as an available agent without silently taking over the current thread
-- Keeps validation and real-session regression aligned with the new install contract
+- Shapes current-info and compare prompts into cleaner real-search steps first
+- Recovers more safely when `WebSearch` returns `Did 0 searches`
+- Uses task tracking for complex non-team work before fanning out plain agents
+- Reduces keyword-dependent routing by leaning more on structural intent detection
 
 ---
 
@@ -247,10 +247,10 @@ If several plugins are injecting guidance, keep one dominant behavior-alignment 
 Update to the latest version, reload the session, and reinstall if needed.  
 Recent versions add a compatibility layer for plain-text `SendMessage`.
 
-### Team or subagent sessions feel visually noisy
+### Current-info or compare tasks keep missing web results
 
-Update to `0.4.5`, then reload the plugin cleanly.
-This version removes the old plugin-side default-agent injection path, so new installs no longer force `hello2cc:native` into Claude Code settings.
+Update to `0.4.6`, then reload the plugin cleanly.  
+This version tightens short-query shaping and treats `Did 0 searches` as an empty search attempt instead of a successful result.
 
 ---
 

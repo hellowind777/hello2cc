@@ -128,7 +128,13 @@ test('route only emits a prompt-state snapshot when it changes', () => {
     tools: ['WebSearch'],
     prompt: '再看一下今天 AI 新闻',
   }, env);
-  assert.deepEqual(third, { suppressOutput: true });
+  const thirdState = parseAdditionalContextJson(third.hookSpecificOutput.additionalContext);
+  assert.equal(thirdState.response_contract.specialization, 'current_info');
+  assert.ok(
+    thirdState.specialization_candidates.items.some(
+      (item) => item.id === 'current_info' && item.reasons.includes('websearch:proxy-conditional'),
+    ),
+  );
 });
 
 test('route skips explicit slash commands', () => {
@@ -282,6 +288,29 @@ test('route derives non-lexicon bounded implementation from artifact shape', () 
   assert.equal(state.response_contract.preferred_shape, 'brief_status_then_changes_validation_and_risks');
   assert.match(context, /边界清晰的实施切片|优先直接执行/i);
   assert.match(context, /不要仅因为多文件|Plan` agent 就进入 `EnterPlanMode`/);
+});
+
+test('route treats repo-heavy forward-slash Windows paths as complex implementation with task tracking', () => {
+  const env = isolatedEnv();
+  const output = run('route', {
+    session_id: 'route-repo-heavy-task-tracking',
+    tools: ['TaskCreate', 'TaskList', 'TaskGet', 'TaskUpdate', 'Agent'],
+    prompt: '使用 A 对比 B，看看 bootstrap/hook/script 太冗余要怎么修复，路径在 C:/repo/a.ts 和 C:/repo/b.ts',
+  }, env);
+  const context = output.hookSpecificOutput.additionalContext;
+  const state = parseAdditionalContextJson(context);
+
+  assert.equal(state.intent.analysis.prompt_shape.structured_artifact, true);
+  assert.equal(state.intent.analysis.prompt_shape.path_artifact_count, 2);
+  assert.equal(state.intent.analysis.prompt_shape.repo_artifact_heavy, true);
+  assert.equal(state.intent.actions.implement, true);
+  assert.equal(state.intent.routing.bounded_implementation, true);
+  assert.equal(state.intent.routing.complex, true);
+  assert.equal(state.execution_playbook.role, 'direct_executor');
+  assert.ok(state.policy.policies.some((policy) => policy.id === 'task-tracking'));
+  assert.match(context, /先用宿主 task tracking 立住真实状态/);
+  assert.match(context, /TaskCreate \/ TaskList \/ TaskUpdate/);
+  assert.doesNotMatch(context, /持续协作型 team|TeamCreate/);
 });
 
 test('route keeps protocol explanation prompts out of capability and team-status routing', () => {
@@ -542,6 +571,7 @@ test('route keeps active-team continuity from hijacking non-team-owned specializ
       role: 'general_operator',
       orderedSteps: [
         'check_websearch_surface_or_cooldown',
+        'shape_first_websearch_query',
         'run_or_reuse_real_search_results',
         'report_sources_and_uncertainty',
       ],

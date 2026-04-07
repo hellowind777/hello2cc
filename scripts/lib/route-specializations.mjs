@@ -135,8 +135,8 @@ export function specializedRoutePlaybook(role, specialization = '', continuity =
     return compactState({
       role,
       specialization,
-      ordered_steps: ['check_websearch_surface_or_cooldown', 'run_or_reuse_real_search_results', 'report_sources_and_uncertainty'],
-      avoid_shortcuts: ['memory_presented_as_current_fact'],
+      ordered_steps: ['check_websearch_surface_or_cooldown', 'shape_first_websearch_query', 'run_or_reuse_real_search_results', 'report_sources_and_uncertainty'],
+      avoid_shortcuts: ['memory_presented_as_current_fact', 'overloaded_query_before_real_search'],
     });
   }
 

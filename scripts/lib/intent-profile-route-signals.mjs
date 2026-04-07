@@ -14,6 +14,31 @@ export function deriveCurrentInfoSignals(seed, sessionContext = {}, artifactSign
     retryRequested: seed.structure.has('retry'),
   });
   const explicitWebSearchSurface = promptMentionsAny(seed.slots.text, ['WebSearch']);
+  const nonLexiconExternalCompare = Boolean(
+    !seed.actions.has('current_info') &&
+    !seed.lexiconGuided &&
+    seed.compare &&
+    sessionContext?.webSearchAvailable &&
+    !seed.promptEnvelope.structuredArtifact &&
+    !seed.promptEnvelope.repoArtifactHeavy &&
+    !seed.promptEnvelope.knownSurfaceMentioned &&
+    !artifactSignals.research &&
+    !workflowSignals.implement &&
+    !seed.verify &&
+    !artifactSignals.review &&
+    !seed.planRequest &&
+    !seed.topics.has('tools') &&
+    !seed.topics.has('skills') &&
+    !seed.topics.has('mcp') &&
+    !seed.guideTopic &&
+    !seed.frontend &&
+    !seed.backend &&
+    !seed.collaboration.size &&
+    (
+      Number(seed.promptEnvelope?.clauseCount || 0) >= 2 ||
+      Number(seed.promptEnvelope?.charCount || 0) >= 24
+    )
+  );
   const hostBoundaryCurrentInfo = Boolean(
     !seed.actions.has('current_info') &&
     sessionContext?.webSearchAvailable &&
@@ -23,7 +48,7 @@ export function deriveCurrentInfoSignals(seed, sessionContext = {}, artifactSign
     !workflowSignals.implement &&
     !seed.verify &&
     !artifactSignals.review &&
-    !seed.compare &&
+    (!seed.compare || nonLexiconExternalCompare) &&
     !seed.planRequest &&
     !seed.topics.has('tools') &&
     !seed.topics.has('skills') &&
@@ -32,9 +57,14 @@ export function deriveCurrentInfoSignals(seed, sessionContext = {}, artifactSign
     (
       explicitWebSearchSurface ||
       hasObservedWebSearchBoundary(sessionContext) ||
-      ['proxy-cooldown', 'proxy-probe'].includes(webSearchGuidance.mode)
+      ['proxy-cooldown', 'proxy-probe'].includes(webSearchGuidance.mode) ||
+      nonLexiconExternalCompare
     ) &&
-    (seed.promptEnvelope.questionLike || isThinNeutralPrompt(seed.promptEnvelope)),
+    (
+      seed.promptEnvelope.questionLike ||
+      isThinNeutralPrompt(seed.promptEnvelope) ||
+      nonLexiconExternalCompare
+    ),
   );
 
   return {
