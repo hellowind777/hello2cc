@@ -15,16 +15,16 @@
 
 ---
 
-## 🆕 0.4.8 相对 0.4.7 的变化
+## 🆕 0.4.9 相对 0.4.8 的变化
 
-这次版本主要保持 `0.4.7` 的运行时行为基线不变：
+这次版本主要保持 `0.4.8` 的运行时行为基线不变：
 
-| 0.4.8 说明 | 你更容易感受到的结果 |
+| 0.4.9 说明 | 你更容易感受到的结果 |
 |---|---|
-| 运行时路由基线保持 `0.4.7` 行为 | team 重试、task tracking、current-info 等行为不需要新的迁移适配 |
+| 运行时路由基线保持 `0.4.8` 行为 | team 重试、task tracking、current-info 等行为不需要新的迁移适配 |
 | 不需要额外改配置 | 现有 Claude Code、CCSwitch 和插件配置可以继续沿用 |
 | 当前用户可感知修复继续生效 | 原生风格的 team 重试回退与最近的 WebSearch 整形会继续保留 |
-| README 已刷新到 `0.4.8` 基线 | 升级说明已更新到当前版本，但不会改变正常使用方式 |
+| README 已刷新到 `0.4.9` 基线 | 升级说明已更新到当前版本，但不会改变正常使用方式 |
 
 ---
 
@@ -172,9 +172,9 @@ claude plugins install hello2cc@hello2cc-local
 如果真实模型落点由 **CCSwitch** 控制，就继续把真实映射放在 CCSwitch 里。  
 在 `hello2cc` 里优先使用稳定的 Claude 槽位值，例如 `inherit`、`opus`、`sonnet`、`haiku`。
 
-### 0.4.8 特别加强了什么
+### 0.4.9 特别加强了什么
 
-- 保持 `0.4.7` 的运行时行为基线不变
+- 保持 `0.4.8` 的运行时行为基线不变
 - 现有用户升级后不需要新增迁移动作
 - 原生风格的 team 重试回退路径继续保留
 - 最近针对 current-info / WebSearch 的行为收紧继续保留
@@ -249,7 +249,7 @@ claude plugins install hello2cc@hello2cc-local
 
 ### team 缺失或删除后，重试 teammate 时出现 hello2cc 红字拦截
 
-请升级到 `0.4.8` 后重新加载插件。  
+请升级到 `0.4.9` 后重新加载插件。  
 当前版本已经移除显式 teammate 重试时的插件侧前置 deny，missing-team 会改回走 Claude Code 原生的 team 报错路径。
 
 ### current-info 或对比题经常搜不到结果
