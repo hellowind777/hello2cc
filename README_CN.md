@@ -15,16 +15,16 @@
 
 ---
 
-## 🆕 0.4.7 相对 0.4.6 的变化
+## 🆕 0.4.8 相对 0.4.7 的变化
 
-这次补丁版重点是去掉一个不够原生的 team 重试拦截，让 team 行为继续向 Claude Code 原生路径靠拢：
+这次版本主要保持 `0.4.7` 的运行时行为基线不变：
 
-| 0.4.7 变化 | 你更容易感受到的结果 |
+| 0.4.8 说明 | 你更容易感受到的结果 |
 |---|---|
-| 去掉插件侧 missing-team 前置 deny | 显式 teammate 重试不再先被 hello2cc 红字拦截 |
-| team 失败路径更贴近原生 Claude Code | team 缺失或已删除时，改回走 Claude Code 自己的 TeamCreate / spawnTeam 报错路径 |
-| teammate 重试更自然 | 缺队伍后的再次尝试，不再仅凭插件记忆被提前短路 |
-| README 与升级说明同步更新 | 现在文档会直接说明 `0.4.6` 到 `0.4.7` 的 team 行为变化 |
+| 运行时路由基线保持 `0.4.7` 行为 | team 重试、task tracking、current-info 等行为不需要新的迁移适配 |
+| 不需要额外改配置 | 现有 Claude Code、CCSwitch 和插件配置可以继续沿用 |
+| 当前用户可感知修复继续生效 | 原生风格的 team 重试回退与最近的 WebSearch 整形会继续保留 |
+| README 已刷新到 `0.4.8` 基线 | 升级说明已更新到当前版本，但不会改变正常使用方式 |
 
 ---
 
@@ -172,12 +172,12 @@ claude plugins install hello2cc@hello2cc-local
 如果真实模型落点由 **CCSwitch** 控制，就继续把真实映射放在 CCSwitch 里。  
 在 `hello2cc` 里优先使用稳定的 Claude 槽位值，例如 `inherit`、`opus`、`sonnet`、`haiku`。
 
-### 0.4.7 特别加强了什么
+### 0.4.8 特别加强了什么
 
-- 去掉了 missing-team 之后对显式 teammate 重试的插件侧红字 deny
-- 把 missing-team 的处理还给 Claude Code 原生 team 工具路径
-- 让显式 team 重试更贴近原生 Claude Code / Opus 的行为
-- 保留 continuity 记忆，但不再把它直接变成前置硬拦截
+- 保持 `0.4.7` 的运行时行为基线不变
+- 现有用户升级后不需要新增迁移动作
+- 原生风格的 team 重试回退路径继续保留
+- 最近针对 current-info / WebSearch 的行为收紧继续保留
 
 ---
 
@@ -249,8 +249,8 @@ claude plugins install hello2cc@hello2cc-local
 
 ### team 缺失或删除后，重试 teammate 时出现 hello2cc 红字拦截
 
-请升级到 `0.4.7` 后重新加载插件。  
-这个版本已经移除显式 teammate 重试时的插件侧前置 deny，missing-team 会改回走 Claude Code 原生的 team 报错路径。
+请升级到 `0.4.8` 后重新加载插件。  
+当前版本已经移除显式 teammate 重试时的插件侧前置 deny，missing-team 会改回走 Claude Code 原生的 team 报错路径。
 
 ### current-info 或对比题经常搜不到结果
 

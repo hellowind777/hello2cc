@@ -1,5 +1,30 @@
 # 更新日志
 
+## 0.4.8 - 2026-04-08
+
+- 统一稳定版 `v...` tag 与 beta tag 的 release-notes 查找路径，避免因 tag 风格不同导致说明生成失败
+- 补齐 `0.4.5` 到 `0.4.7` 的 changelog 节，恢复最近版本的连续更新记录
+- 让仓库版本说明、发布脚本与当前插件版本重新保持一致
+
+## 0.4.7 - 2026-04-08
+
+- 去掉 missing-team 场景下对显式 teammate 重试的插件侧前置 deny，不再先出现 hello2cc 红字拦截
+- 当 team 缺失或已删除时，显式 teammate 重试回到 Claude Code 原生的 TeamCreate / spawnTeam 报错路径
+- 保留 continuity 记忆用于恢复与提示，但不再仅凭旧失败记录把后续显式 team 重试直接短路
+
+## 0.4.6 - 2026-04-07
+
+- 收紧 current-info / 对比题的 WebSearch 查询整形，更接近原生 Claude Code 的短 query 与拆分搜索路径
+- 把 `Did 0 searches` 明确视为空搜索而不是成功结果，减少代理链路下的误判与机械重试
+- 进一步解耦 task tracking 与 team 路由，让复杂多步骤任务优先停留在 task-first 路径
+- 增强语言无关的结构化意图判断，减少对固定关键词命中的依赖
+
+## 0.4.5 - 2026-04-06
+
+- 移除插件随包 `settings.json` 的默认 agent 注入，安装后不再向 Claude Code settings 写入 `agent=hello2cc:native`
+- 让插件启用 / 禁用状态回到 Claude Code 自己的 marketplace 与 enabledPlugins 机制管理
+- 清理缓存安装形态，避免插件缓存目录继续携带默认 agent 设置文件
+- 同步更新文档与真实会话回归校验，补齐“无默认 agent 注入”的发布契约
 ## 0.4.4 - 2026-04-06
 
 - 进一步把 hello2cc 对齐到原生 Claude Code 的能力策略流：由宿主先定义能力边界与优先级，再让模型在受约束空间内做语义选择，而不是靠关键词硬路由

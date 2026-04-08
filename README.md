@@ -15,16 +15,16 @@ Its job is simpler:
 
 ---
 
-## 🆕 What changed in 0.4.7
+## 🆕 What changed in 0.4.8
 
-Compared with `0.4.6`, this patch release focuses on removing a non-native team retry interruption so team behavior stays closer to Claude Code itself:
+Compared with `0.4.7`, this release keeps the current runtime behavior baseline stable:
 
-| 0.4.7 change | What you should notice |
+| 0.4.8 note | What you should notice |
 |---|---|
-| Removed plugin-side missing-team pre-deny | Explicit teammate retries no longer get blocked early by a hello2cc red warning |
-| Closer native team failure path | Missing or deleted teams now fall back to Claude Code's own TeamCreate / spawnTeam error path |
-| Cleaner teammate retry behavior | Re-running a teammate after a missing-team failure no longer gets short-circuited by plugin memory alone |
-| README and release guidance updated | Upgrade notes now describe the team retry behavior that changed from `0.4.6` |
+| Runtime routing baseline stays on `0.4.7` behavior | Team retry, task tracking, and current-info behavior continue without a new migration path |
+| No extra config changes are required | Existing Claude Code, CCSwitch, and plugin settings can continue as-is |
+| The current user-facing fixes remain the active baseline | Native-style team retry fallback and recent WebSearch shaping stay in effect |
+| README is refreshed to the `0.4.8` baseline | Upgrade guidance now reflects the current release without changing normal usage |
 
 ---
 
@@ -172,12 +172,12 @@ Good when you want most agents to use the same Claude slot.
 If your real target model is mapped through **CCSwitch**, keep the actual mapping there.  
 In `hello2cc`, prefer stable Claude slot values such as `inherit`, `opus`, `sonnet`, or `haiku`.
 
-### What 0.4.7 especially improves
+### What 0.4.8 especially improves
 
-- Removes the plugin-side red deny for explicit teammate retries after a missing-team failure
-- Leaves missing-team handling on the native Claude Code team tool path
-- Keeps explicit team retries closer to native Claude Code / Opus behavior
-- Preserves existing continuity tracking without turning it into an early hard stop
+- Keeps the `0.4.7` runtime behavior baseline intact
+- Requires no new migration for existing Claude Code users
+- Continues the native-style team retry fallback path
+- Continues the recent current-info / WebSearch behavior improvements
 
 ---
 
@@ -249,8 +249,8 @@ Recent versions add a compatibility layer for plain-text `SendMessage`.
 
 ### Team retries show a hello2cc red deny after a missing or deleted team
 
-Update to `0.4.7`, then reload the plugin cleanly.  
-This version removes the plugin-side pre-deny for explicit teammate retries, so missing-team handling falls back to Claude Code's native team error path instead.
+Update to `0.4.8`, then reload the plugin cleanly.  
+Current versions remove the plugin-side pre-deny for explicit teammate retries, so missing-team handling falls back to Claude Code's native team error path instead.
 
 ### Current-info or compare tasks keep missing web results
 

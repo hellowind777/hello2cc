@@ -9,11 +9,19 @@ export function normalizeTag(tag) {
     throw new Error('Missing release tag');
   }
 
-  return normalized.startsWith('v') ? normalized : `v${normalized}`;
+  return normalized;
 }
 
 function versionFromTag(tag) {
-  return normalizeTag(tag).replace(/^v/, '');
+  const normalized = normalizeTag(tag).replace(/^v/, '');
+  const semverPrefix = normalized.match(/^\d+\.\d+\.\d+/)?.[0];
+  return semverPrefix || normalized;
+}
+
+export function tagLookupVariants(tag) {
+  const normalized = normalizeTag(tag);
+  const bare = normalized.replace(/^v/, '');
+  return [...new Set([normalized, `v${bare}`, bare])].filter(Boolean);
 }
 
 function parseChangelogSections(markdown) {

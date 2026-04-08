@@ -8,6 +8,7 @@ import {
   readChangelogSection,
   renderAcknowledgements,
   renderReleaseNotes,
+  tagLookupVariants,
 } from './lib/release-notes.mjs';
 
 function parseArgs(argv) {
@@ -50,11 +51,23 @@ function gitText(...args) {
   }).trim();
 }
 
-function previousTag(tag) {
-  const tags = gitLines('tag', '--sort=creatordate');
-  const index = tags.indexOf(tag);
+function previousTag(tag, tags = []) {
+  const orderedTags = tags.length > 0 ? tags : gitLines('tag', '--sort=creatordate');
+  const variants = tagLookupVariants(tag);
+  const resolvedTag = variants.find((candidate) => orderedTags.includes(candidate)) || tag;
+  const index = orderedTags.indexOf(resolvedTag);
   if (index <= 0) return '';
-  return tags[index - 1];
+  return orderedTags[index - 1];
+}
+
+function resolveExistingTag(tag, tags = []) {
+  const orderedTags = tags.length > 0 ? tags : gitLines('tag', '--sort=creatordate');
+  const resolvedTag = tagLookupVariants(tag).find((candidate) => orderedTags.includes(candidate));
+  if (!resolvedTag) {
+    throw new Error(`Tag ${tag} was not found. Checked variants: ${tagLookupVariants(tag).join(', ')}`);
+  }
+
+  return resolvedTag;
 }
 
 function compareUrl(repo, fromTag, toTag) {
@@ -111,17 +124,19 @@ async function resolveAcknowledgementRefs(repo, numbers) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  const tag = normalizeTag(args.tag || process.env.TAG_NAME || process.env.GITHUB_REF_NAME || '');
+  const requestedTag = normalizeTag(args.tag || process.env.TAG_NAME || process.env.GITHUB_REF_NAME || '');
   const repo = String(args.repo || process.env.GITHUB_REPOSITORY || '').trim();
   const outputFile = String(args.output || '').trim();
   const changelogPath = resolve(args.changelog || 'CHANGELOG.md');
+  const orderedTags = gitLines('tag', '--sort=creatordate');
+  const tag = resolveExistingTag(requestedTag, orderedTags);
 
-  const section = readChangelogSection(changelogPath, tag);
+  const section = readChangelogSection(changelogPath, requestedTag);
   if (!section?.body?.trim()) {
-    throw new Error(`Missing CHANGELOG section for ${tag}. Add "## ${tag.replace(/^v/, '')} - YYYY-MM-DD" with bullet points before publishing.`);
+    throw new Error(`Missing CHANGELOG section for ${requestedTag}. Add "## ${requestedTag.replace(/^v/, '').match(/^\d+\.\d+\.\d+/)?.[0] || requestedTag.replace(/^v/, '')} - YYYY-MM-DD" with bullet points before publishing.`);
   }
 
-  const fromTag = previousTag(tag);
+  const fromTag = previousTag(tag, orderedTags);
   const commitText = fromTag ? gitText('log', '--format=%B', `${fromTag}..${tag}`) : gitText('log', '--format=%B', '-n', '1', tag);
   const issueNumbers = extractIssueRefs(section.body, commitText);
   const acknowledgementRefs = await resolveAcknowledgementRefs(repo, issueNumbers);

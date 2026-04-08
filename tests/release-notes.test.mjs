@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   changelogSectionForTag,
   extractIssueRefs,
+  tagLookupVariants,
   renderAcknowledgements,
   renderReleaseNotes,
 } from '../scripts/lib/release-notes.mjs';
@@ -28,6 +29,22 @@ test('finds the exact changelog section for a tag', () => {
     date: '2026-04-02',
     body: '- Fixed issue #7 and tightened routing\n- Followed up on #9 with regression coverage',
   });
+});
+
+test('finds the base changelog section for beta tags without a v prefix', () => {
+  const section = changelogSectionForTag(SAMPLE_CHANGELOG, '1.2.3beta1');
+
+  assert.deepEqual(section, {
+    heading: '## 1.2.3 - 2026-04-02',
+    version: '1.2.3',
+    date: '2026-04-02',
+    body: '- Fixed issue #7 and tightened routing\n- Followed up on #9 with regression coverage',
+  });
+});
+
+test('computes lookup variants for stable and beta tags', () => {
+  assert.deepEqual(tagLookupVariants('0.4.7beta'), ['0.4.7beta', 'v0.4.7beta']);
+  assert.deepEqual(tagLookupVariants('v0.4.3'), ['v0.4.3', '0.4.3']);
 });
 
 test('extracts unique issue refs in numeric order', () => {
