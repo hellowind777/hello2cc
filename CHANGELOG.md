@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.5.7 - 2026-04-12
+
+- 修复 `issue #15`：`TaskCreated` 不再沿用完成态质量门槛，恢复到 Claude Code 原生创建语义，避免短描述、topic-only 描述或空描述在建任务阶段被 hello2cc 额外拦截
+- 保留 `TaskCompleted` 的完成证据校验，继续只在真正“标记完成”时阻断缺少验证依据的任务收尾
+- 补充 `TaskCreated` 薄描述、issue 复现场景、空描述转发三类回归测试，确保创建态不再误伤
+
 ## 0.5.6 - 2026-04-12
 
 - 新增 `ccstatusline` 兼容桥接命令，可在不修改 Claude Code / ccstatusline 源码的前提下，把 hello2cc 第三方模型场景里的 transcript usage 回填到 status line JSON
