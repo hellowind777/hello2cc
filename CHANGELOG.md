@@ -14,6 +14,12 @@
 - 清理 `missingTeams`、`active_team`、`attachedTeamContext` 等连续体记忆里的占位残留，阻断 `Team "none"` / `Team "__omit__"` 被反复恢复、反复重试的空转链路
 - 补充旧脏状态、TeamDelete 残留污染、TeammateIdle 占位值三类回归测试，覆盖“偶发误触发 + 一直创建一直失败”的类似场景
 
+## 0.5.3 - 2026-04-12
+
+- 新增统一的参与者占位值净化，对 `Agent.name`、`TaskUpdate.owner`、`SendMessage.to` 等位置出现的 `none` / `__omit__` 一类伪参与者做空值归一化，避免污染 teammate continuity
+- 当会话里已经存在已验证的 active team + task board 连续体时，仅在真实团队语义成立的前提下回填真实 teammate / owner，不再让占位值把普通 worker 误导成 team 路由
+- 补充参与者占位值的 route continuity、task ownership、message target、mailbox 状态等回归测试，兜住“占位值残留后越用越歪”的类似场景
+
 ## 0.5.2 - 2026-04-12
 
 - 修复普通 `Agent` 把 `none` / `__omit__` 一类省略占位误当成真实 `team_name`，避免在非 team 路径上触发 `spawnTeam` missing-team 报错

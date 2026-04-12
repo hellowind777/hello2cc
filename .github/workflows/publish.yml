@@ -209,7 +209,7 @@ jobs:
 
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           TARGET_VERSION="${{ needs.prepare.outputs.npm_version }}"
-          PUBLISHED_VERSION=$(npm view "${PACKAGE_NAME}@${TARGET_VERSION}" version --json 2>/dev/null | tr -d '"')
+          PUBLISHED_VERSION=$(npm view "${PACKAGE_NAME}@${TARGET_VERSION}" version --json 2>/dev/null | tr -d '"' || true)
 
           if [ "$PUBLISHED_VERSION" = "$TARGET_VERSION" ]; then
             echo "already_published=true" >> "$GITHUB_OUTPUT"
