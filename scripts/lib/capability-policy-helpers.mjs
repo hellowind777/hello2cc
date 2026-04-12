@@ -1,4 +1,5 @@
 import { configuredModels } from './config.mjs';
+import { realTeamNameOrEmpty } from './team-name.mjs';
 
 function trimmed(value) {
   return String(value || '').trim();
@@ -13,12 +14,7 @@ export function uniqueStrings(values) {
 }
 
 export function activeTeamName(sessionContext = {}) {
-  const teamName = trimmed(sessionContext?.teamName);
-  if (!teamName || ['main', 'default'].includes(teamName.toLowerCase())) {
-    return '';
-  }
-
-  return teamName;
+  return realTeamNameOrEmpty(sessionContext?.teamName);
 }
 
 export function visibleTaskBoardTools(sessionContext = {}) {

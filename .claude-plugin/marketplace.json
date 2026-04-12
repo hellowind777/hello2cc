@@ -10,7 +10,7 @@
     {
       "name": "hello2cc",
       "description": "Thin Claude Code plugin for third-party models, focused on host state, protocol adaptation, and repeated-failure debounce.",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "source": "./",
       "author": {
         "name": "hello2cc"

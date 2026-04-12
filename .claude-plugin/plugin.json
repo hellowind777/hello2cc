@@ -1,6 +1,6 @@
 {
   "name": "hello2cc",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Claude Code alignment plugin that drives third-party models toward Opus-compatible workflows, tool usage, and output style.",
   "author": {
     "name": "hello2cc"

@@ -1,3 +1,5 @@
+import { realTeamNameOrEmpty } from './team-name.mjs';
+
 function trimmed(value) {
   return String(value || '').trim();
 }
@@ -38,8 +40,11 @@ function missingTeamMatch(payload = {}) {
   const match = error.match(/Team "([^"]+)" does not exist\. Call spawnTeam first to create the team\./);
   if (!match) return null;
 
+  const teamName = realTeamNameOrEmpty(match[1]);
+  if (!teamName) return null;
+
   return {
-    teamName: String(match[1] || '').trim(),
+    teamName,
     error,
   };
 }

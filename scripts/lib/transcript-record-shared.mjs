@@ -2,6 +2,7 @@ import {
   normalizeDescription,
   normalizeName,
 } from './transcript-context-utils.mjs';
+import { realTeamNameOrEmpty } from './team-name.mjs';
 
 export function truncatePreview(value, limit = 180) {
   const normalized = normalizeDescription(value).replace(/\s+/g, ' ');
@@ -28,7 +29,7 @@ export function latestAttachmentOfType(record, type) {
 export function normalizeAttachmentTeamContext(attachment) {
   if (!attachment || typeof attachment !== 'object') return null;
 
-  const teamName = normalizeName(attachment?.teamName);
+  const teamName = realTeamNameOrEmpty(normalizeName(attachment?.teamName));
   const agentName = normalizeName(attachment?.agentName);
   const teamConfigPath = normalizeDescription(attachment?.teamConfigPath);
   const taskListPath = normalizeDescription(attachment?.taskListPath);

@@ -2,6 +2,7 @@ import {
   activeWorktreeFailure,
   hasIntentTeamSemantics,
   isImplicitAssistantTeamName,
+  isOmittedTeamPlaceholder,
   provenActiveTeamContext,
   readTrimmed,
   stripAgentTeamFields,
@@ -50,7 +51,9 @@ export function normalizeAgentTeamSemantics(input = {}, sessionContext = {}) {
   return {
     input: stripAgentTeamFields(input),
     changed: true,
-    reason: explicitTeamIsImplicit
+    reason: isOmittedTeamPlaceholder(explicitTeamName)
+      ? `hello2cc stripped placeholder Agent.team_name=${JSON.stringify(explicitTeamName)}; plain workers should omit team_name entirely, and real teammates should pass a real team_name or establish the team first`
+      : explicitTeamIsImplicit
       ? 'hello2cc blocked implicit assistant team semantics until TeamCreate or a real explicit team_name is available'
       : 'hello2cc stripped implicit teammate fields until host state proves a real active team context; plain workers should omit name/team_name, and real teammates should pass an explicit team_name or establish the team first',
     blocked: false,

@@ -1,3 +1,5 @@
+import { realTeamNameOrEmpty } from './team-name.mjs';
+
 function normalizeSlug(value) {
   return String(value || '')
     .trim()
@@ -65,7 +67,7 @@ function preferredModelForAgent(input, config) {
   }
 
   const agentType = canonicalAgentType(input);
-  const teamName = String(input?.team_name || '').trim();
+  const teamName = realTeamNameOrEmpty(input?.team_name);
   const hasTeamName = Boolean(teamName);
 
   if (agentType === 'claude-code-guide') {

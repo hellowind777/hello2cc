@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.5.2 - 2026-04-12
+
+- 修复普通 `Agent` 把 `none` / `__omit__` 一类省略占位误当成真实 `team_name`，避免在非 team 路径上触发 `spawnTeam` missing-team 报错
+- 当会话里已存在真实 team + task board 连续体时，把这类占位安全回填为已验证的真实 `team_name`，恢复 teammate 路由
+- 忽略 transcript / team attachment 中的伪 team 名，避免污染后续 Agent 路由、team model 选择与团队状态推断
+
 ## 0.5.1 - 2026-04-10
 
 - 修复 `TaskCreated` 误用任务完成态“完成证据”门槛的问题，降低建任务阶段被红字拦截的概率

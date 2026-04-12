@@ -1,11 +1,10 @@
 import { worktreePreconditionsAppearSatisfied } from './worktree-preconditions.mjs';
 import { hasActiveTaskBoard } from './tool-policy-state.mjs';
+import { isNonRealTeamName, isOmittedTeamPlaceholder } from './team-name.mjs';
 
 function trimmed(value) {
   return String(value || '').trim();
 }
-
-const IMPLICIT_ASSISTANT_TEAM_NAMES = new Set(['main', 'default']);
 
 function normalizedFailureKey(value, caseInsensitive = false) {
   const normalized = trimmed(value);
@@ -59,8 +58,10 @@ export function knownMissingTeamFailure(sessionContext = {}, teamName) {
 }
 
 export function isImplicitAssistantTeamName(value) {
-  return IMPLICIT_ASSISTANT_TEAM_NAMES.has(trimmed(value).toLowerCase());
+  return isNonRealTeamName(value);
 }
+
+export { isOmittedTeamPlaceholder };
 
 export function stripAgentTeamFields(input) {
   const updatedInput = { ...input };

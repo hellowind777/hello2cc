@@ -1,4 +1,4 @@
-const IMPLICIT_ASSISTANT_TEAM_NAMES = new Set(['main', 'default']);
+import { realTeamNameOrEmpty } from './team-name.mjs';
 
 export function trimmed(value) {
   return String(value || '').trim();
@@ -47,10 +47,5 @@ export function compactState(value) {
 }
 
 export function visibleTeamName(sessionContext = {}) {
-  const teamName = trimmed(sessionContext?.teamName);
-  if (!teamName || IMPLICIT_ASSISTANT_TEAM_NAMES.has(teamName.toLowerCase())) {
-    return '';
-  }
-
-  return teamName;
+  return realTeamNameOrEmpty(sessionContext?.teamName);
 }

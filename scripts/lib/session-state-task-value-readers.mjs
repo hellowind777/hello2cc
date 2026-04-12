@@ -1,5 +1,6 @@
 import { structuredApproveFieldValue } from './send-message-helpers.mjs';
 import { sessionContextFromPayload } from './session-state-context.mjs';
+import { realTeamNameOrEmpty } from './team-name.mjs';
 import { taskIdFromInput } from './tool-policy-state.mjs';
 import {
   collapseWhitespace,
@@ -162,7 +163,7 @@ export function readAgentWorkerName(payload = {}) {
 }
 
 export function readAgentTeamName(payload = {}) {
-  return readToolTeamName(payload) || String(payload?.tool_input?.team_name || '').trim();
+  return realTeamNameOrEmpty(readToolTeamName(payload) || String(payload?.tool_input?.team_name || '').trim());
 }
 
 export function readSendMessageTarget(payload = {}) {
@@ -225,10 +226,10 @@ export function payloadTeamSnapshot(payload = {}) {
 
 export function resolvedTeamName(payload = {}, previous = {}, next = {}) {
   const snapshot = payloadTeamSnapshot(payload);
-  return readToolTeamName(payload)
-    || trimmed(snapshot.teamName)
-    || trimmed(previous?.teamName)
-    || trimmed(next?.teamName);
+  return realTeamNameOrEmpty(readToolTeamName(payload))
+    || realTeamNameOrEmpty(snapshot.teamName)
+    || realTeamNameOrEmpty(previous?.teamName)
+    || realTeamNameOrEmpty(next?.teamName);
 }
 
 export function resolvedAgentName(payload = {}, previous = {}, next = {}) {
@@ -247,8 +248,7 @@ export function sessionActorName(payload = {}, previous = {}, next = {}) {
 }
 
 export function shouldTrackSharedTeam(teamName) {
-  const normalized = trimmed(teamName).toLowerCase();
-  return Boolean(normalized) && !['main', 'default'].includes(normalized);
+  return Boolean(realTeamNameOrEmpty(teamName));
 }
 
 export function isReservedSharedOwner(name) {
