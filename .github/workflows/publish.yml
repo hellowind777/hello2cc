@@ -131,7 +131,7 @@ jobs:
           echo "RELEASE_NOTES_FILE=$notes_file" >> "$GITHUB_ENV"
 
       - name: Upload release notes artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-notes
           path: ${{ runner.temp }}/release-notes.md
@@ -252,7 +252,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download release notes artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-notes
           path: ${{ runner.temp }}
