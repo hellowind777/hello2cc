@@ -1,5 +1,14 @@
 # 更新日志
 
+## 0.5.11 - 2026-05-23
+
+- 放宽完成态生命周期校验：`TaskCompleted` / `TaskUpdate(status=completed)` 现在改为 warning-first，不再因为描述过薄而硬拦截真实完成态同步
+- 兼容新版本 Claude Code 的 `Task -> Agent` 工具更名：统一把 `Task` 视为 `Agent` 别名，并同步覆盖 hooks、capability 识别、session continuity 与真实会话回归
+- 收紧 capability / compare / explain 场景下的 team / task-board 注入，减少 `Team "default" does not exist` 这类误触发
+- 收紧 native agent 与 output style 的文本纪律，减少过度规划、强制确认、元叙述、黑话和邀约式结尾
+- 补强 `ccstatusline` transcript usage 回填：兼容 `agentId` / `agent_id` / `agent.id`、direct transcript path，以及常见 1M 模型别名和 `CLAUDE_CODE_MAX_CONTEXT_TOKENS` 推断
+- 同步补强 subagent 身份读取器的 camelCase / snake_case / nested 兼容，并补充相关回归测试与对齐审计文档
+
 ## 0.5.10 - 2026-05-23
 
 - 修复 `issue #18`：`TaskCompleted` / `TaskUpdate(status=completed)` 不再因为 description 证据格式不够理想而被 hello2cc 硬拦截；仍会给出 stderr 提示，但不再让 task board 与真实完成状态漂移
