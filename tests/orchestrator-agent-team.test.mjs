@@ -21,6 +21,22 @@ test('pre-agent-model strips implicit teammate fields for plain workers', () => 
   assert.match(output.hookSpecificOutput.permissionDecisionReason, /plain subagent semantics outside explicit team-oriented workflows/i);
 });
 
+test('pre-agent-model also normalizes Task alias to plain worker semantics', () => {
+  const env = isolatedEnv();
+  const output = run('pre-agent-model', {
+    session_id: 'plain-subagent-task-alias',
+    tool_name: 'Task',
+    tool_input: {
+      subagent_type: 'Explore',
+      name: 'module-reader',
+    },
+  }, env);
+
+  assert.equal(output.hookSpecificOutput.updatedInput.name, undefined);
+  assert.equal(output.hookSpecificOutput.updatedInput.team_name, undefined);
+  assert.match(output.hookSpecificOutput.permissionDecisionReason, /plain subagent semantics outside explicit team-oriented workflows/i);
+});
+
 test('pre-agent-model preserves explicit real team_name and can inject team model', () => {
   const env = isolatedEnv({
     CLAUDE_PLUGIN_OPTION_TEAM_MODEL: 'sonnet',

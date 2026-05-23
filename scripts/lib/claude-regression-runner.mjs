@@ -48,10 +48,17 @@ function failInvalidModelAlias(name, lines) {
 }
 
 function assertRequiredTools(name, initLine) {
-  const requiredTools = ['ToolSearch', 'Task', 'TaskOutput', 'TaskStop'];
-  for (const tool of requiredTools) {
-    if (!Array.isArray(initLine.tools) || !initLine.tools.includes(tool)) {
-      fail(`real-session case "${name}" missing native tool "${tool}"`);
+  const tools = Array.isArray(initLine.tools) ? initLine.tools : [];
+  const requiredTools = [
+    ['ToolSearch'],
+    ['Task', 'Agent'],
+    ['TaskOutput'],
+    ['TaskStop'],
+  ];
+
+  for (const aliases of requiredTools) {
+    if (!aliases.some((tool) => tools.includes(tool))) {
+      fail(`real-session case "${name}" missing native tool "${aliases[0]}"`);
     }
   }
 }

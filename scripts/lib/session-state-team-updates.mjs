@@ -18,6 +18,7 @@ import {
   handleTaskListTeamUpdate,
   handleTaskUpdateTeamUpdate,
 } from './session-state-team-tool-updates.mjs';
+import { isAgentToolName } from './tool-name-aliases.mjs';
 
 /**
  * Mirrors successful team-scoped tool calls into the shared team state store.
@@ -126,7 +127,7 @@ export function rememberSharedTeamToolSuccess({ toolName = '', payload = {}, pre
       };
     }
 
-    if (toolName === 'Agent') {
+    if (isAgentToolName(toolName)) {
       return handleAgentTeamUpdate(payload, mutableState, finalizeTeamState);
     }
 

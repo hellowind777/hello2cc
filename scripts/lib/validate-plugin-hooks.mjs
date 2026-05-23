@@ -43,11 +43,11 @@ function validatePreToolHooks(context, hooks) {
     return;
   }
 
-  const hasAgentHook = preToolUse.some((entry) => entry.matcher === 'Agent');
+  const hasAgentHook = preToolUse.some((entry) => entry.matcher === 'Agent' || entry.matcher === 'Task');
   const hasEnterWorktreeHook = preToolUse.some((entry) => entry.matcher === 'EnterWorktree');
   const hasTeamCreateHook = preToolUse.some((entry) => entry.matcher === 'TeamCreate');
   if (!hasAgentHook || !hasEnterWorktreeHook || !hasTeamCreateHook) {
-    context.fail('hooks.json should define PreToolUse hooks for Agent, EnterWorktree, and TeamCreate');
+    context.fail('hooks.json should define PreToolUse hooks for Agent/Task alias, EnterWorktree, and TeamCreate');
   } else {
     context.ok('hooks Agent pretool injection');
   }
@@ -59,8 +59,8 @@ function validatePostToolHooks(context, hooks) {
     context.fail('hooks.json should define PostToolUse hooks');
   } else {
     const postMatchers = new Set(postToolUse.map((entry) => entry.matcher));
-    if (!postMatchers.has('TeamCreate') || !postMatchers.has('TeamDelete') || !postMatchers.has('Agent')) {
-      context.fail('hooks.json should track TeamCreate, TeamDelete, and Agent success via PostToolUse');
+    if (!postMatchers.has('TeamCreate') || !postMatchers.has('TeamDelete') || (!postMatchers.has('Agent') && !postMatchers.has('Task'))) {
+      context.fail('hooks.json should track TeamCreate, TeamDelete, and Agent/Task success via PostToolUse');
     } else {
       context.ok('hooks PostToolUse coverage');
     }
@@ -71,8 +71,8 @@ function validatePostToolHooks(context, hooks) {
     context.fail('hooks.json should define PostToolUseFailure hooks');
   } else {
     const failureMatchers = new Set(postToolUseFailure.map((entry) => entry.matcher));
-    if (!failureMatchers.has('Agent') || !failureMatchers.has('EnterWorktree')) {
-      context.fail('hooks.json should track Agent and EnterWorktree failures via PostToolUseFailure');
+    if ((!failureMatchers.has('Agent') && !failureMatchers.has('Task')) || !failureMatchers.has('EnterWorktree')) {
+      context.fail('hooks.json should track Agent/Task and EnterWorktree failures via PostToolUseFailure');
     } else {
       context.ok('hooks PostToolUseFailure coverage');
     }

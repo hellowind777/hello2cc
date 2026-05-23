@@ -7,6 +7,10 @@ function normalizeHookEventName(value) {
   return normalized || 'TaskCompleted';
 }
 
+function normalizeStatus(value) {
+  return normalizeText(value).toLowerCase();
+}
+
 function visibleCharCount(text) {
   return Array.from(String(text || '').replace(/\s+/g, '')).length;
 }
@@ -120,6 +124,19 @@ export function getTaskValidationStage(payload = {}) {
   return taskRequiresCompletionEvidence(payload?.hook_event_name) ? 'completion' : 'creation';
 }
 
+export function completionValidationSeverity(payload = {}) {
+  const hookEventName = normalizeHookEventName(payload?.hook_event_name);
+  if (hookEventName === 'TaskCreated') {
+    return 'none';
+  }
+
+  if (hookEventName === 'TaskCompleted' || normalizeStatus(payload?.task_status) === 'completed') {
+    return 'warn';
+  }
+
+  return 'block';
+}
+
 export function validateTaskDefinition({
   task_subject: taskSubject,
   task_description: taskDescription,
@@ -150,4 +167,15 @@ export function validateTaskDefinition({
   }
 
   return '';
+}
+
+export function taskValidationFeedback(payload = {}) {
+  const message = validateTaskDefinition(payload);
+  const severity = message ? completionValidationSeverity(payload) : 'none';
+
+  return {
+    message,
+    severity,
+    stage: getTaskValidationStage(payload),
+  };
 }

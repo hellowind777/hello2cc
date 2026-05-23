@@ -32,6 +32,7 @@ test('session-start surfaces host tools and native agents as structured state', 
     session_id: 'session-capabilities',
     model: 'opus',
     tools: [
+      'Task',
       'ToolSearch',
       'AskUserQuestion',
       'SendMessage',
@@ -49,6 +50,7 @@ test('session-start surfaces host tools and native agents as structured state', 
   const state = parseAdditionalContextJson(output.hookSpecificOutput.additionalContext);
 
   assert.ok(state.host.tools.includes('AskUserQuestion'));
+  assert.ok(state.host.tools.includes('Task'));
   assert.ok(state.host.tools.includes('SendMessage'));
   assert.ok(state.host.tools.includes('EnterWorktree'));
   assert.ok(state.host.tools.includes('PowerShell'));

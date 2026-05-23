@@ -13,13 +13,13 @@ function run(payload) {
   });
 }
 
-test('task-completed blocks vague task subjects', () => {
+test('task-completed no longer blocks vague task subjects', () => {
   const result = run({
     task_subject: 'fix',
     task_description: 'Implement something and test it.',
   });
 
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 0);
   assert.match(result.stderr, /too vague/i);
 });
 
@@ -43,13 +43,25 @@ test('task-created accepts actionable tasks without explicit completion evidence
   assert.equal(result.status, 0, result.stderr);
 });
 
-test('task-completed blocks missing completion evidence', () => {
+test('task-completed no longer blocks missing completion evidence', () => {
   const result = run({
     task_subject: 'Inspect MCP routing for GitHub access',
     task_description: 'Analyze how the plugin should inspect GitHub via MCP and summarize the flow.',
   });
 
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 0);
+  assert.match(result.stderr, /completion evidence/i);
+});
+
+test('task-completed completed-status warnings no longer block legitimate task-board completion', () => {
+  const result = run({
+    hook_event_name: 'TaskCompleted',
+    task_status: 'completed',
+    task_subject: 'Inspect MCP routing for GitHub access',
+    task_description: 'Analyze how the plugin should inspect GitHub via MCP and summarize the flow.',
+  });
+
+  assert.equal(result.status, 0);
   assert.match(result.stderr, /completion evidence/i);
 });
 

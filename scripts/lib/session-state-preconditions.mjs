@@ -23,6 +23,7 @@ import {
   recordWebSearchSuccess,
 } from './session-state-websearch-helpers.mjs';
 import { realTeamNameOrEmpty } from './team-name.mjs';
+import { isAgentToolName } from './tool-name-aliases.mjs';
 
 export { rememberTeammateIdle };
 
@@ -44,7 +45,7 @@ export function rememberToolFailure(payload = {}) {
       ? recordWebSearchFailure(current, payload)
       : current.webSearchHealth;
 
-    const agentWorktreeError = toolName === 'Agent' ? worktreeFailureError(payload) : '';
+    const agentWorktreeError = isAgentToolName(toolName) ? worktreeFailureError(payload) : '';
     const enterWorktreeError = toolName === 'EnterWorktree' ? enterWorktreeFailureError(payload) : '';
     const worktreeError = agentWorktreeError || enterWorktreeError;
     if (worktreeError && cwd) {
@@ -57,7 +58,7 @@ export function rememberToolFailure(payload = {}) {
       });
     }
 
-    if (toolName === 'Agent') {
+    if (isAgentToolName(toolName)) {
       const missingTeam = missingTeamMatch(payload);
       if (missingTeam?.teamName) {
         const key = normalizeFailureKey(missingTeam.teamName, true);
@@ -132,7 +133,7 @@ export function rememberToolSuccess(payload = {}) {
       }
     }
 
-    if (toolName === 'Agent') {
+    if (isAgentToolName(toolName)) {
       const teamName = realTeamNameOrEmpty(payload?.tool_input?.team_name);
       if (teamName) {
         delete missingTeams[normalizeFailureKey(teamName, true)];

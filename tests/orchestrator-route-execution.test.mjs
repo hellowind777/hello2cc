@@ -410,6 +410,24 @@ test('route keeps protocol explanation prompts out of capability and team-status
   }
 });
 
+test('route keeps capability tables about subagents and task tools out of team bootstrap guidance', () => {
+  const env = isolatedEnv();
+  const output = run('route', {
+    session_id: 'route-capability-table-no-team-demo',
+    tools: ['Task', 'TaskOutput', 'TaskStop', 'ToolSearch', 'SendMessage', 'TeamCreate'],
+    prompt: '用表格说明 subagents、Task tool、ToolSearch 的使用场景和区别。',
+  }, env);
+  if (!output.hookSpecificOutput?.additionalContext) {
+    assert.deepEqual(output, { suppressOutput: true });
+    return;
+  }
+
+  const context = output.hookSpecificOutput.additionalContext;
+  assert.doesNotMatch(context, /优先 `TeamCreate` → `TaskList` \/ `TaskCreate` 建真实 task board → teammate/);
+  assert.doesNotMatch(context, /把当前任务按持续协作型 team 语义处理/);
+  assert.doesNotMatch(context, /把当前任务按多步任务处理：优先用 `TaskCreate \/ TaskList \/ TaskUpdate`/);
+});
+
 test('route keeps Claude Code guide difference questions on explanation instead of capability discovery', () => {
   const env = isolatedEnv();
   const output = run('route', {

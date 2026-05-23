@@ -148,6 +148,16 @@
         ]
       },
       {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/orchestrator.mjs\" pre-agent-model",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "EnterWorktree",
         "hooks": [
           {
@@ -300,6 +310,16 @@
         ]
       },
       {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/orchestrator.mjs\" post-tool-use",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "SendMessage",
         "hooks": [
           {
@@ -403,6 +423,16 @@
     "PostToolUseFailure": [
       {
         "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/orchestrator.mjs\" post-tool-failure",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
         "hooks": [
           {
             "type": "command",

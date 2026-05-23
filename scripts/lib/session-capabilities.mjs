@@ -22,7 +22,7 @@ function hasAnyName(values, names) {
 }
 
 const TOOL_CAPABILITY_RULES = [
-  { key: 'agentToolAvailable', names: ['Agent'] },
+  { key: 'agentToolAvailable', names: ['Agent', 'Task'] },
   { key: 'claudeCodeGuideAvailable', names: ['ClaudeCodeGuide', 'claude-code-guide', 'Claude Code Guide'] },
   { key: 'skillToolAvailable', names: ['Skill'] },
   { key: 'discoverSkillsAvailable', names: ['DiscoverSkills'] },

@@ -37,12 +37,12 @@ function createPluginCache(root) {
   return pluginPath;
 }
 
-function createSuccessfulStream(pluginPath) {
+function createSuccessfulStream(pluginPath, tools = ['ToolSearch', 'Task', 'TaskOutput', 'TaskStop']) {
   const initLine = {
     type: 'system',
     subtype: 'init',
     plugins: [{ name: 'hello2cc', path: pluginPath }],
-    tools: ['ToolSearch', 'Task', 'TaskOutput', 'TaskStop'],
+    tools,
     agents: ['Explore', 'Plan', 'General-Purpose', 'hello2cc:native'],
   };
   const hookLine = {
@@ -223,6 +223,20 @@ test('real regression falls back to PATH Claude binary when claude.ps1 is missin
   assert.equal(result.status, 0);
   assert.match(result.stdout, /OK real-session baseline/);
   assert.match(readFileSync(logPath, 'utf8'), /^plugins --help/m);
+});
+
+test('real regression accepts Agent-only init surfaces after the Task rename', () => {
+  const { root } = isolatedEnv();
+  const pluginPath = createPluginCache(root);
+  const { env: fakeEnv } = createFakeClaudeEnv({
+    streamJsonl: createSuccessfulStream(pluginPath, ['ToolSearch', 'Agent', 'TaskOutput', 'TaskStop']),
+  });
+
+  const result = runRealRegression(fakeEnv);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /OK real-session baseline/);
+  assert.match(result.stdout, /OK real-session repeat/);
 });
 
 test('real regression preserves original failure when restore also fails', () => {

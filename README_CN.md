@@ -4,153 +4,112 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 [![Publish](https://img.shields.io/github/actions/workflow/status/hellowind777/hello2cc/publish.yml?label=publish)](https://github.com/hellowind777/hello2cc/actions/workflows/publish.yml)
 
-让第三方模型在 Claude Code 里尽量按 Opus 一样思考、运行、选工具和输出。
+让 Claude Code 里的第三方模型更接近原生 Opus 会话的行为方式。
 
-`hello2cc` 不负责替你接入模型、管理网关、配置账号权限。  
-它解决的是另一层问题：
-
-> 当你已经通过 **CCSwitch** 或其他映射方式把 GPT、Kimi、DeepSeek、Gemini、Qwen 等第三方模型接进 Claude Code 后，`hello2cc` 会把它们继续往 Opus-compatible 的 Claude Code 原生工作方式上推：原生能力优先级、工具/agent/team 选择、失败恢复，以及输出风格。
+`hello2cc` 不负责网关、provider 映射或账号接入。  
+它处在插件层，主要把第三方模型往 Claude Code 原生的工具选择、agent 路由、task / team 流程、失败处理和回复风格上继续收紧。
 
 **语言：** [English](./README.md) | 简体中文
 
----
+## 概览
 
-## 🆕 0.5.0 相对 0.4.9 的变化
+`hello2cc` 适合已经通过 CCSwitch 或其他映射层，把 GPT、Kimi、DeepSeek、Gemini、Qwen 等第三方模型接进 Claude Code 的用户。
 
-这次版本重点调整了 hello2cc 与宿主 skills / workflows 的共存方式：
+它主要处理三类问题：
 
-| 0.5.0 说明 | 你更容易感受到的结果 |
+- 让能力选择更接近 Claude Code 原生优先级
+- 减少 plain agent、team、task、follow-up 工作流上的误路由
+- 收紧回复习惯，让输出更直接、更克制、更偏执行
+
+### 适合场景
+
+- 已经在 Claude Code 中运行第三方模型
+- 当前仓库暴露了 skills、workflows、MCP 或插件能力
+- 希望减少绕路、减少对提示措辞的依赖
+
+### 使用边界
+
+- 不负责 API key、provider、gateway 接入
+- 不会替 Claude Code 打开原本不存在的工具
+- 不替代 CCSwitch 或其他模型映射层
+- 不覆盖仓库里的 `AGENTS.md`、`CLAUDE.md` 或用户明确指令
+
+## 0.5.11 更新内容
+
+相对上一个公开 release 版本 `v0.5.9`，`0.5.11` 主要补了两类兼容修复和一轮输出纪律收紧：
+
+| 范围 | 变化 |
 |---|---|
-| 已 surfaced 的宿主 skill / workflow 可以接管主流程 | 像 `superpowers` 这类插件不再那么容易被 hello2cc 并行覆盖 |
-| 原生输出风格仍然持续生效 | 即使主流程让给宿主技能，最终输出也仍尽量贴近 Claude Code / Opus 风格 |
-| 工具语义与协议适配继续常驻 | 第三方模型依然能获得原生工具使用提示、参数净化与失败防抖 |
-| 能识别 SessionStart 注入的 bootstrap skill 文档 | `using-superpowers` 这类启动技能内容可以被识别成真实宿主技能面 |
+| 任务完成态 | `TaskCompleted` / `TaskUpdate(status=completed)` 不再因为描述过薄被 hard block；现在改成 warning-first，不再卡住 completed 同步 |
+| 新版 Claude Code 兼容 | 旧的 `Task` subagent 工具名现在统一当成 `Agent` 别名处理，覆盖 hooks、能力识别、session continuity 和真实回归 |
+| 输出纪律 | 说明类、对比类问题不再容易被升级成 team / task-board 演示；native style 也更明确地约束简洁、直接、少仪式感的表达 |
 
----
+## 功能特性
 
-## 🎯 为什么使用 hello2cc
+- **native-first 路由引导**：尽量把模型拉回 Claude Code 当前已经 surfaced 的能力顺序，而不是走宽泛关键词猜路由。
+- **agent / team 护栏**：区分普通 worker 和真实 teammate 流程，减少 `team_name` 污染，只在宿主已经证明存在真实 team 时保留 task-board 连续体。
+- **task lifecycle 收口**：把建任务和完结任务的校验边界拆开，避免任务明明做完却因为插件红字卡在 board 里。
+- **Task-to-Agent 兼容**：同一个版本里同时兼容旧 `Task` 名称和新 `Agent` 名称。
+- **回复风格收紧**：减少过度规划、强制确认、工具表演、元叙述、黑话和邀约式结尾。
+- **ccstatusline 桥接**：在第三方模型链路下 Claude Code usage 字段为 0 时，可从 transcript 回填状态线统计。
 
-| 常见问题 | hello2cc 的改善 |
-|---|---|
-| 明明已有 skill 或 workflow，模型却反复重写流程 | 更倾向续用已 surfaced 或已加载的流程 |
-| 明明 MCP resource 或工具已经可直接调用，模型却还在绕路 | 更容易优先走当前会话里已经可用的能力 |
-| 普通并行 worker 被误判成 team / teammate 语义 | 减少可避免的 agent 路由错误 |
-| 模型能回答，但不会选合适的 Claude Code 能力入口 | 把工具、agent、workflow、MCP 的选择压回 Claude Code 原生优先级 |
-| 模型过度依赖固定措辞或关键词提示 | 改成在宿主公开候选内做语言无关的语义匹配 |
-| 输出风格和原生 Opus 差异很大 | 强制收敛到更接近原生 Claude Code 的结果导向风格 |
-| 对话里元叙述过多 | 更接近简洁、行动优先的原生风格 |
+## 快速开始
 
----
+### 前置条件
 
-## ✅ 适合谁 / ❌ 不适合谁
+- Node.js 18 或更高版本
+- 支持插件的 Claude Code
+- 如果你不是直接使用 Claude 原生模型，需要先有 CCSwitch 或其他可用的模型映射层
 
-### ✅ 适合谁
+### 安装
 
-- 你已经通过 **CCSwitch** 或其他映射层把第三方模型接进 Claude Code
-- 你希望这些模型更像原生 Claude Code 会话那样工作
-- 你本地已经装了 skills、workflows、MCP 或插件，希望它们更容易被用到
-- 你希望并行 agent 更容易走对路径
+1. 克隆仓库。
 
-### ❌ 不适合谁
+   ```bash
+   git clone https://github.com/hellowind777/hello2cc.git
+   cd hello2cc
+   ```
 
-- 还没完成 provider、账号、API key 或网关接入的人
-- 希望插件替 Claude Code 打开原本不存在的工具的人
-- 想用它替代 **CCSwitch** 的人
-- 想让它覆盖 `CLAUDE.md`、`AGENTS.md` 或用户明确要求的人
+2. 添加本地 marketplace。
 
----
+   ```bash
+   claude plugins marketplace add "<repo-path>"
+   ```
 
-## 📊 一眼看懂
+   把 `<repo-path>` 替换成你本地的 `hello2cc` 仓库路径。
 
-| 项目 | 数值 |
-|---|---|
-| 安装流程 | 3 步 |
-| 安装后额外入口命令 | 0 |
-| 常见配置方案 | 2 种 |
-| 核心目标 | 1 个 —— 让第三方模型尽量按原生 Claude Code / Opus 习惯工作 |
+3. 安装并启用插件。
 
----
+   ```bash
+   claude plugins install hello2cc@hello2cc-local
+   claude plugins enable hello2cc@hello2cc-local
+   ```
 
-## ✨ 它主要帮助什么
+4. 重新加载 Claude Code。
 
-<table>
-<tr>
-<td width="50%">
+   ```bash
+   /reload-plugins
+   ```
 
-### Skills 与 workflows
+### 验证
 
-当流程已经出现或已经开始时，更容易沿着现有流程继续，而不是重新来一遍。
-
-</td>
-<td width="50%">
-
-### Tools 与 MCP
-
-更倾向优先使用当前会话里已经可见、已经可用的能力。
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### Agents 与 teams
-
-一次性并行任务更容易保留普通 agent 路径，持续协作任务更容易走真实的 team + task board 路径。
-
-</td>
-<td width="50%">
-
-### 对话体验
-
-减少不必要的元叙述和可避免的路由错误。
-
-</td>
-</tr>
-</table>
-
----
-
-## 🚀 快速开始
-
-### 1）克隆仓库
+执行：
 
 ```bash
-git clone https://github.com/hellowind777/hello2cc.git
-cd hello2cc
+claude plugins list
 ```
 
-### 2）添加本地 marketplace
+预期结果：
 
-```bash
-claude plugins marketplace add "<repo-path>"
-```
+- `hello2cc@hello2cc-local` 已安装
+- 插件状态为 enabled
+- 新会话不再依赖插件随包 `settings.json` 去强制写入 `agent=hello2cc:native`
 
-把 `<repo-path>` 替换成你本地 `hello2cc` 仓库路径。
+## 推荐配置
 
-### 3）安装插件
+### 最小配置
 
-```bash
-claude plugins install hello2cc@hello2cc-local
-```
-
-然后重开 Claude Code，或执行 `/reload-plugins`。
-
-### 你会看到什么
-
-- 不需要再额外输入特殊入口命令
-- 安装插件不会再向 Claude Code 的 settings 写入 `agent=hello2cc:native`
-- 插件启用状态继续由 Claude Code 自己管理，而不是由插件随包附带的 `settings.json` 决定
-- 第三方模型更容易直接使用当前会话已暴露的能力
-- 普通并行 agent 更不容易误走错误路径
-- team/subagent 场景更不容易因为注入上下文过重而放大 UI 重绘问题
-
----
-
-## 🔧 推荐配置
-
-### 方案 A：尽量保持默认强对齐
-
-适合：你的模型映射已经由 **CCSwitch** 处理，希望 hello2cc 直接按默认强对齐层工作。
+适合模型映射已经在别处处理好，只希望 hello2cc 负责行为对齐：
 
 ```json
 {
@@ -158,9 +117,9 @@ claude plugins install hello2cc@hello2cc-local
 }
 ```
 
-### 方案 B：为 agent 固定一个默认 Claude 槽位
+### 固定默认 agent 槽位
 
-适合：你希望大多数 agent 默认走同一个 Claude 槽位。
+适合希望大多数 agent 默认落到同一个 Claude 槽位：
 
 ```json
 {
@@ -169,164 +128,125 @@ claude plugins install hello2cc@hello2cc-local
 }
 ```
 
-如果真实模型落点由 **CCSwitch** 控制，就继续把真实映射放在 CCSwitch 里。  
-在 `hello2cc` 里优先使用稳定的 Claude 槽位值，例如 `inherit`、`opus`、`sonnet`、`haiku`。
+这里建议只写 Claude 槽位值，例如 `inherit`、`opus`、`sonnet`、`haiku`。  
+如果真实模型映射由 CCSwitch 处理，就继续把第三方模型别名保留在 CCSwitch，不要直接写进 hello2cc。
 
-### 0.5.0 特别加强了什么
-
-- 保留 hello2cc 常驻的原生输出壳层，但不再强制私有 workflow
-- 当宿主已经 surfaced 更合适的 skill / workflow owner 时，更自然地让出主流程
-- 继续保留原生工具语义、协议纠偏与重复失败防抖
-- 提升与 SessionStart 启动技能、工作流插件的共存能力
-
----
-
-## 🔧 它如何融入你的日常使用
+## 工作原理
 
 ```mermaid
 flowchart LR
-    A[第三方模型已接入 Claude Code] --> B[像平常一样打开 Claude Code 会话]
-    B --> C[当前会话暴露工具、agent、skills、workflows 或 MCP]
-    C --> D[hello2cc 帮模型更自然地选择路径]
-    D --> E[减少绕路和错误路由]
+    A[第三方模型已接入 Claude Code] --> B[Claude Code 暴露当前会话工具、agent、skills 或 MCP]
+    B --> C[hello2cc 增加宿主感知路由与协议护栏]
+    C --> D[模型更容易选择原生路径]
+    D --> E[减少工具、team、task 和回复风格漂移]
 
     style A fill:#e3f2fd
-    style B fill:#e3f2fd
-    style C fill:#fff3e0
-    style D fill:#e8f5e9
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
     style E fill:#4caf50,color:#fff
 ```
 
----
+### 主要行为层
 
-## 🛠️ 重装 / 升级
+| 层 | 作用 |
+|---|---|
+| 宿主状态引导 | 把当前会话的 tools、agents、workflows、MCP 和 continuity 状态显式给模型，减少模型在错误边界内乱选 |
+| pre/post tool 护栏 | 归一化输入、清理占位值、记录失败记忆，并对确定性错误保持 fail-closed |
+| native style 壳层 | 让输出更贴近 Claude Code 默认的直接、克制、执行优先风格 |
 
-如果你修改了本地仓库，或者想完整重装：
-
-```bash
-claude plugins uninstall --scope user hello2cc@hello2cc-local
-claude plugins marketplace remove hello2cc-local
-claude plugins marketplace add "<repo-path>"
-claude plugins install hello2cc@hello2cc-local
-```
-
-然后重开 Claude Code，或执行 `/reload-plugins`。
-
----
-
-## 🛠️ 排错
+## 排错
 
 ### 安装后感觉没生效
 
 按这个顺序检查：
 
-1. 重开 Claude Code 或执行 `/reload-plugins`
+1. 重新加载 Claude Code 或重开会话
 2. 确认插件已安装并启用
-3. 如果你是从本地仓库升级，先完整重装一次
+3. 如果你是更新本地克隆仓库后重装，先做一次完整重装
 
-### 禁用插件或执行 `/reload` 后，`hello2cc:native` 还显示着
+### 禁用插件或 reload 后，`hello2cc:native` 还显示着
 
-这通常是 Claude Code 当前会话或历史恢复出来的 agent 状态残留，不等于插件又被重新启用了。
-现在的 `hello2cc` 已不再通过插件侧 `settings.json` 强行写入 `agent=hello2cc:native`；完整重装后，新会话不会再继续产生这种默认注入。
+Claude Code 可能会保留线程级 agent 状态。  
+当前版本已经不再通过插件侧 `settings.json` 强制选中 `hello2cc:native`，所以完整重装并开启新会话后，不应再继续产生新的默认注入。
 
-### 模型还是没有使用你想要的 skill、工具或 MCP
+### `TaskCompleted` 或 `TaskUpdate(status=completed)` 还是被卡住
 
-先确认：
+请升级到 `0.5.11` 或更高版本后重新加载插件。  
+当前版本已经把“描述过薄”的完成态校验从 hard block 调整为 warning-first，不再让任务明明完成却卡在 board 里。
 
-1. 该能力当前确实已经在会话里暴露出来
-2. 更高优先级的项目规则或用户指令没有限制它
-3. 你是在延续同一个流程，而不是换了一条完全不同的路径
-4. 如果某个插件是在 SessionStart 注入 bootstrap skill，请升级到 `0.5.0` 或更高版本，让 hello2cc 能把它识别成宿主技能面而不是继续争夺主流程
+### 新版 Claude Code 里 `Agent` 和 `Task` 看起来对不上
 
-### 多个插件一起启用时感觉很乱
+请升级到 `0.5.11` 或更高版本。  
+hello2cc 现在已经把 `Task` 统一当作 `Agent` 别名处理。
 
-从 `0.5.0` 开始，hello2cc 会继续保留自己的输出风格壳层和工具语义层，但不再要求始终接管主线程 workflow。  
-如果另一个插件已经 surfaced 真实的 skill / workflow owner，hello2cc 会更自然地让出主流程，而不是继续并行注入一套执行剧本。
+### CCS + sub2api + codex 还会出现 `Team "default" does not exist`
 
-### 仍然遇到 `summary is required when message is a string`
+当前版本已经减少 capability / compare / explain 问法下的误注入。  
+如果问题还在，优先看 Claude Code debug log，确认是不是上游模型或代理层仍然真的发出了 `team_name: "default"` 或 `name + team_name` 这样的工具输入。
 
-请升级到最新版本，重新加载会话，必要时重装插件。  
-新版本已为纯文本 `SendMessage` 增加兼容处理。
+### 终端还是没有流式输出
 
-### team 缺失或删除后，重试 teammate 时出现 hello2cc 红字拦截
+当前仓库没有发现插件侧主动关闭 Claude Code streaming 的代码路径。  
+如果问题还在，优先检查：
 
-请升级到 `0.5.0` 后重新加载插件。  
-当前版本已经移除显式 teammate 重试时的插件侧前置 deny，missing-team 会改回走 Claude Code 原生的 team 报错路径。
+1. `sub2api` 是否把流式响应缓冲成整包输出
+2. CCS 当前 Anthropic 端点和 Responses 端点是否都真正开启了流式透传
+3. `claude --debug-file <path>` 日志里是否已经显示上游返回本身就是非流式
 
-### current-info 或对比题经常搜不到结果
+### `ccstatusline` 还是显示 0 usage
 
-请升级到 `0.4.6` 或更高版本后重新加载插件。  
-近几个版本已经进一步收紧短 query 规则，并把 `Did 0 searches` 明确视为一次空搜索而不是成功结果。
+请使用 [`docs/ccstatusline.md`](./docs/ccstatusline.md) 里的桥接命令。  
+桥接脚本会从 transcript 回填 usage，兼容 `agentId` / `agent_id` / `agent.id` 以及 direct subagent transcript path，并且只在 Claude Code 传来的 `context_window` 字段缺失或为 0 时才回填。
 
----
+## 文档
 
-## ❓ 常见问题
+- [ccstatusline 兼容桥接](./docs/ccstatusline.md)
+- [Claude Code 重构方案对齐审计](./docs/claude-code-refactor-alignment-audit.md)
+- [更新日志](./CHANGELOG.md)
+
+## 常见问题
 
 <details>
 <summary><strong>hello2cc 会替代 CCSwitch 吗？</strong></summary>
 
-不会。模型映射继续交给 CCSwitch；hello2cc 关注的是模型已经进入 Claude Code 之后的行为。
+不会。provider 和模型映射仍然应该由 CCSwitch 或其他映射层负责。hello2cc 只处理模型已经进入 Claude Code 之后的行为对齐。
 
 </details>
 
 <details>
-<summary><strong>它会替我打开 Claude Code 原本没有暴露的工具吗？</strong></summary>
+<summary><strong>它会替 Claude Code 打开原本没有暴露的工具吗？</strong></summary>
 
-不会。它只能帮助模型更好地使用当前会话已经可用的能力。
-
-</details>
-
-<details>
-<summary><strong>安装后还需要手动切 output style 吗？</strong></summary>
-
-通常不需要。安装完成后一般可以直接用。
+不会。它只能帮助模型更稳定地使用当前会话里已经存在的能力。
 
 </details>
 
 <details>
-<summary><strong>安装后会强制把当前主线程切成 <code>hello2cc:native</code> 吗？</strong></summary>
+<summary><strong>还需要手动切 output style 吗？</strong></summary>
 
-不会。插件只是提供一个可用的 native agent 选项，不再向 Claude Code 注入默认 `agent` 设置。
-
-</details>
-
-<details>
-<summary><strong>它会阻止我现有的 skills、插件或 MCP 吗？</strong></summary>
-
-不会。目标恰恰相反：让第三方模型更容易发现并使用这些现有能力。
+通常不需要。插件会提供 output style 和 native agent 选项，但正常安装后不应该要求额外手动入口。
 
 </details>
 
 <details>
 <summary><strong>是不是所有多 agent 任务都会变成 team？</strong></summary>
 
-不会。一次性的并行任务可以继续走普通 agent；更持续的协作型任务才更容易进入团队路径。
+不会。一次性并行任务可以继续走普通 agent。只有真正需要 task-board、owner 或 handoff 的场景才更适合真实 team 流程。
 
 </details>
 
 <details>
-<summary><strong>我一定要设置默认 agent 模型吗？</strong></summary>
+<summary><strong>hello2cc 的表述纪律能压过仓库规则吗？</strong></summary>
 
-不一定。只有当你希望多数 agent 默认固定到同一个 Claude 槽位时，才建议额外设置。
-
-</details>
-
-<details>
-<summary><strong>现在还能把 hello2cc 切成轻量兼容模式吗？</strong></summary>
-
-不能。当前方向是把 hello2cc 保持成默认强对齐层，而不是在需要时退回只做少量净化和兼容修正的弱模式。
+不能。用户指令、Claude Code 宿主规则、仓库级规则仍然优先。hello2cc 只是在剩余空间里尽量把默认行为收紧到更直接、更克制的风格。
 
 </details>
 
----
-
-## 📞 支持
+## 支持
 
 - Issues：https://github.com/hellowind777/hello2cc/issues
 - Releases：https://github.com/hellowind777/hello2cc/releases
 
----
+## 许可证
 
-## 📜 许可证
-
-Apache-2.0
+本项目采用 [Apache-2.0 许可证](./LICENSE)。  
+详见 [LICENSE](./LICENSE)。

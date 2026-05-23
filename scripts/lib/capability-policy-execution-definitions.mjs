@@ -22,6 +22,7 @@ export const EXECUTION_POLICY_DEFINITIONS = [
       const taskBoardTools = visibleTaskBoardTools(sessionContext);
       const lines = [
         '- team 语义只在“持久 task board / owner / handoff / shared teammate context”成立时启用；普通并行 worker 不等于 team。',
+        '- 如果用户是在问能力边界、用法示例、协议解释或对比，不要把这些 team 能力直接执行成真实 team / teammate / task-board 操作。',
       ];
 
       if (activeTeamName(sessionContext)) {
@@ -46,6 +47,16 @@ export const EXECUTION_POLICY_DEFINITIONS = [
       const lines = [];
       const activeTeam = activeTeamName(sessionContext);
       const taskBoardTools = visibleTaskBoardTools(sessionContext);
+      const isCapabilityLike = Boolean(
+        requestProfile?.capabilityQuery ||
+        requestProfile?.capabilityProbeShape ||
+        requestProfile?.compare ||
+        requestProfile?.explain,
+      );
+
+      if (isCapabilityLike) {
+        return lines;
+      }
 
       if (requestNeedsTeamWorkflow(requestProfile) && activeTeam) {
         lines.push(`当前已有 active team continuity（\`${activeTeam}\`）；优先沿 \`SendMessage\`${taskBoardTools.length ? ` + ${taskBoardTools.map((tool) => `\`${tool}\``).join(' / ')}` : ''} 继续，不要重建 team 或口头宣布 team 已创建。`);
@@ -88,12 +99,20 @@ export const EXECUTION_POLICY_DEFINITIONS = [
     sessionLines() {
       return [
         '- 复杂任务用宿主任务能力显式跟踪，不要只在正文里口头列步骤；简单单步任务则直接做。',
+        '- 但 capability / compare / explain 问题先直接回答，不要把任务跟踪能力演成真实 task-board 操作。',
       ];
     },
     routeLines(requestProfile, sessionContext) {
       const lines = [];
       const trackingTool = sessionContext?.taskCreateAvailable ? 'TaskCreate / TaskList / TaskUpdate' : (sessionContext?.todoWriteAvailable ? 'TodoWrite' : '');
+      const isCapabilityLike = Boolean(
+        requestProfile?.capabilityQuery ||
+        requestProfile?.capabilityProbeShape ||
+        requestProfile?.compare ||
+        requestProfile?.explain,
+      );
       if (!trackingTool) return lines;
+      if (isCapabilityLike) return lines;
 
       if (requestNeedsTaskTracking(requestProfile)) {
         lines.push(`把当前任务按多步任务处理：优先用 \`${trackingTool}\` 维护真实任务状态，而不是把计划或进度藏在长段落里。`);

@@ -40,6 +40,7 @@ import {
 import { readTeamEntry } from './team-state-store.mjs';
 import { analyzeIntentProfile } from './intent-profile.mjs';
 import { isSubagentPrompt, startsWithExplicitCommand } from './prompt-signals.mjs';
+import { canonicalToolName, isAgentToolName } from './tool-name-aliases.mjs';
 
 function currentSessionContext(payload = {}) {
   const stored = readSessionContext(payload?.session_id);
@@ -59,7 +60,8 @@ function currentSessionContext(payload = {}) {
 }
 
 function handleNormalizedPreTool(payload, expectedToolName, normalization) {
-  if (payload.tool_name && payload.tool_name !== expectedToolName) {
+  const toolName = canonicalToolName(payload.tool_name);
+  if (toolName && toolName !== expectedToolName) {
     emptySuppress();
     return;
   }
@@ -144,7 +146,7 @@ async function cmdPreAgentModel() {
   const input = payload.tool_input || {};
   const sessionContext = currentSessionContext(payload);
 
-  if (payload.tool_name && payload.tool_name !== 'Agent') {
+  if (payload.tool_name && !isAgentToolName(payload.tool_name)) {
     emptySuppress();
     return;
   }

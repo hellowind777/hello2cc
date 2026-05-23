@@ -28,6 +28,7 @@ import {
   resolvedTaskBlockedBy,
   resolvedTaskBlocks,
 } from './session-state-team-helpers.mjs';
+import { isAgentToolName } from './tool-name-aliases.mjs';
 
 function sendMessageKind(target, currentState = {}, structuredType = '') {
   if (structuredType) {
@@ -192,7 +193,7 @@ export function rememberWorkflowToolSuccess(current = {}, payload = {}) {
     nextState.lastPlanApprovalTarget = '';
   }
 
-  if (toolName === 'Agent') {
+  if (isAgentToolName(toolName)) {
     const teammateName = readAgentWorkerName(payload);
     const teamName = readAgentTeamName(payload);
     if (teammateName && teamName) {
